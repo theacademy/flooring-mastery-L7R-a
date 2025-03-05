@@ -22,7 +22,8 @@ public class OrdersDAOFileImpl implements OrdersDAO{
 
     @Override
     public Order addOrder(Order order) {
-        return null;
+        storage.put(order.getOrderNumber(), order);
+        return order;
     }
 
     @Override
@@ -42,6 +43,11 @@ public class OrdersDAOFileImpl implements OrdersDAO{
 
         String file = ORDER_FILE_PATH+fields[0]+fields[1]+fields[2]+".txt";
         return importFromFile(file);
+    }
+
+    @Override
+    public int getCurrentNumberOfOrders() {
+        return storage.size();
     }
 
     public List<Order> importFromFile(String file) {

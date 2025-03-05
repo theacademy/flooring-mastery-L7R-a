@@ -15,5 +15,5 @@ public interface OrdersDAO {
     Order editOrder(Integer oldOrderNumber, Object newOrder);
     Order removeOrder(Integer orderNumber);
     List<Order> getOrderByDate(String date);
-
+    int getCurrentNumberOfOrders();
 }
