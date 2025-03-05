@@ -46,7 +46,7 @@ public class ServiceLayerImpl implements ServiceLayer{
 
     @Override
     public BigDecimal calTax(BigDecimal materialCost, BigDecimal laborCost, BigDecimal taxRate) {
-        return materialCost.add(laborCost).multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
+        return materialCost.add(laborCost).multiply(taxRate).divide(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
     }
 
     @Override
@@ -66,12 +66,19 @@ public class ServiceLayerImpl implements ServiceLayer{
 
     @Override
     public Tax getTax(String stateCode) {
-        return taxes.getTax(stateCode);
+        return taxes.getTax(stateCode.toUpperCase());
     }
 
     @Override
     public Product getProduct(String productType) {
-        return products.getProduct(productType);
+        String casing = productType.substring(0, 1).toUpperCase() +
+                productType.substring(1).toLowerCase();
+        return products.getProduct(casing);
+    }
+
+    @Override
+    public Order getOrder(Integer orderNumber) {
+        return orders.getOrder(orderNumber);
     }
 
     @Override
@@ -102,7 +109,7 @@ public class ServiceLayerImpl implements ServiceLayer{
             throw new InvalidOrderException("ERROR: Name cannot be left in blank");
         }
         // If the input has anything that is not a character, number, period, or comma, throw error
-        Pattern p = Pattern.compile("[^a-zA-Z0-9.,]");
+        Pattern p = Pattern.compile("[^a-zA-Z0-9., ]");
         if(p.matcher(userInput).find()){
             throw new InvalidOrderException("ERROR: Name can only have character, numbers, periods, and commas");
         }
@@ -143,7 +150,18 @@ public class ServiceLayerImpl implements ServiceLayer{
             }
             return true;
         } catch (NumberFormatException e) {
-            throw new InvalidOrderException("ERROR: Please enter a positive number");        }
+            throw new InvalidOrderException("ERROR: Please enter a positive number");
+        }
+    }
+
+    @Override
+    public boolean isOrderNumberValid(String temporaryNumber) throws InvalidOrderException{
+        try {
+            int num = Integer.parseInt(temporaryNumber);
+            return true;
+        } catch (NumberFormatException e) {
+            throw new InvalidOrderException("ERROR: Please enter a positive number");
+        }
     }
 
     @Override

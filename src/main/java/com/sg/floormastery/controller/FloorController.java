@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 @Component
@@ -75,6 +74,7 @@ public class FloorController {
         }
         return null;
     }
+
     private void addOrder() {
         // Setting up variables to add the order
         List<String> orderData = new ArrayList<>();
@@ -100,17 +100,11 @@ public class FloorController {
                 }
                 if(state == null){
                     String temporaryState = view.getUserOrderState();
-                    if(temporaryState.equals("exit")){
-                        return;
-                    }
                     state = validateInput(temporaryState, service.isStateValid(temporaryState));
 
                 }
                 if(product == null){
                     String temporaryProduct = view.getUserOrderProduct(products);
-                    if(temporaryProduct.equals("exit")){
-                        return;
-                    }
                     product = validateInput(temporaryProduct, service.isProductValid(temporaryProduct));
 
                 }
@@ -147,18 +141,120 @@ public class FloorController {
                 costPerSquareFoot, laborCostPerSquareFoot,
                 materialCost, laborCost, tax, total);
 
-        view.displayOrderSummary(order);
+
+        view.displayOrderInformation(order);
+        String performAction = "";
+        do{
+            performAction = view.confirmAction("add");
+        }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
 
         Order result = service.addOrder(order);
         view.displayActionResult(result, "added");
     }
 
     private void editOrder(){
+        Integer orderNumber = null;
+        List<Order> orders = getOrdersDate();
+
+        view.displayRemoveOrderBanner();
+
+        // If there are no orders with this date
+        if(orders == null){
+            view.displayErrorMessage("No order has this date");
+            return;
+        }
+
+        orderNumber = getOrderNumber();
+        Order order = service.getOrder(orderNumber);
+
+        // Date exist but doesn't have this order number
+        if(order == null){
+            view.displayErrorMessage("No order number matched with the date given");
+            return;
+        }
+
+
+        
+        view.displayOrderInformation(order);
+        String performAction = "";
+        do{
+            performAction = view.confirmAction("add");
+        }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
+
+        Order result = service.editOrder(order);
+        view.displayActionResult(result, "edited");
 
     }
 
     private void removeOrder(){
+        Integer orderNumber = null;
+        List<Order> orders = getOrdersDate();
 
+        view.displayRemoveOrderBanner();
+
+        // If there are no orders with this date
+        if(orders == null){
+            view.displayErrorMessage("No order has this date");
+            return;
+        }
+
+        orderNumber = getOrderNumber();
+        Order order = service.getOrder(orderNumber);
+
+        // Date exist but doesn't have this order number
+        if(order == null){
+            view.displayErrorMessage("No order number matched with the date given");
+            return;
+        }
+
+
+
+        view.displayOrderInformation(order);
+        String performAction = "";
+        do{
+            performAction = view.confirmAction("remove");
+        }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
+
+        Order result = service.addOrder(order);
+        view.displayActionResult(result, "removed");
+    }
+
+    private List<Order> getOrdersDate(){
+
+        boolean hasErrors = false;
+        String date = null;
+        do {
+            try {
+                String temporaryDate = view.getUserOrderDate();
+                date = validateInput(temporaryDate, service.isDateValid(temporaryDate));
+                hasErrors = false;
+            } catch (InvalidOrderException | PersistanceException e) {
+                hasErrors = true;
+                view.displayErrorMessage(e.getMessage());
+            }
+        } while (hasErrors);
+
+        return service.getOrders(date);
+    }
+
+    private Integer getOrderNumber(){
+        boolean hasErrors = false;
+        Integer number = null;
+        String strNumber = null;
+        do {
+            number = null;
+            try {
+                strNumber = view.getUserOrderNumber();
+                if(service.isOrderNumberValid(strNumber)){
+                    number = Integer.parseInt(strNumber);
+                }
+                hasErrors = false;
+            } catch (InvalidOrderException | PersistanceException e) {
+                hasErrors = true;
+                view.displayErrorMessage(e.getMessage());
+            }
+        } while (hasErrors);
+        return number;
     }
 
     private void exportAllData(){

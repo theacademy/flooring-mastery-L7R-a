@@ -26,8 +26,13 @@ public interface ServiceLayer {
     boolean isStateValid(String userInput) throws InvalidOrderException;
     boolean isProductValid(String userInput) throws InvalidOrderException;
     boolean isAreaValid(String userInput) throws InvalidOrderException;
+    boolean isOrderNumberValid(String temporaryNumber)throws InvalidOrderException;
     int getCurrentNumberOfOrders();
 
     Product getProduct(String productType);
+
+    Order getOrder(Integer orderNumber);
+
+    Order editOrder(Order order);
 }
 

@@ -44,25 +44,10 @@ public class FloorView {
     }
 
 
-    public void displayAddOrderBanner(){
-        io.print("In order to add an order we need to get the following information");
-//        String date = io.readString("Please enter the date of the order. (MM-DD-YYYY format)");
-//        String name = io.readString("Great, now we need your name");
-//        String state = io.readString("Awesome, in which state is the order?");
-//
-//        // Displaying products list and storing user's product choice
-//        io.print("The following is the list of products available organized by type," +
-//                " cost per square foot, and labor cost per square foot");
-//
-//        products.stream().
-//                forEach((product)->io.print(
-//                        product.getProductType() + " " + product.getCostPerSquareFoot()+ "$ " +
-//                                product.getLaborCostPerSquareFoot() + "$"));
-//        String productType = io.readString("Please enter the product type you would like to order");
-//        String area = io.readString("Finally, type the area you want to get");
-//        return null;
-    }
 
+    public String getUserOrderNumber() {
+        return io.readString("Please enter the order number");
+    }
 
     public String getUserOrderDate() {
         return io.readString("Please enter the date of the order. (MM-DD-YYYY format)");
@@ -91,12 +76,17 @@ public class FloorView {
         return io.readString("Finally, type the area you want to get");
     }
 
+
+    public void displayAddOrderBanner(){
+        io.print("In order to add an order we need to get the following information");
+    }
+
     public void displayEditOrderBanner(){
 
     }
 
     public void displayRemoveOrderBanner(){
-
+        io.print("In order to delete an order we need to get the following information");
     }
 
     public void displayExportAllDataBanner(){
@@ -112,7 +102,7 @@ public class FloorView {
             io.readString("The order couldn't be" + action);
         }
         else{
-            io.print("The order was " + action + "successfully!");
+            io.print("The order was " + action + " successfully!");
         }
     }
 
@@ -121,8 +111,22 @@ public class FloorView {
         io.print(message+"\n");
     }
 
-    public void displayOrderSummary(Order order) {
-        io.print(order.getCustomerName());
-        return;
+    public void displayOrderInformation(Order order) {
+        io.print("Here is the information for this order:");
+        io.print("Customer name: "+order.getCustomerName());
+        io.print("State: "+order.getState());
+        io.print("Tax rate: "+order.getTaxRate());
+        io.print("Product type: "+order.getProductType());
+        io.print("Area: "+order.getArea());
+        io.print("Cost per square foot: "+order.getCostPerSquareFoot());
+        io.print("Labor cost per square foot: "+order.getLaborCostPerSquareFoot());
+        io.print("Material cost: "+order.getMaterialCost());
+        io.print("Labor cost: "+order.getLaborCost());
+        io.print("Tax: "+order.getTax());
+        io.print("Total: "+order.getTotal());
+    }
+
+    public String confirmAction(String action){
+        return io.readString("Do you want to " +action + " the order? (Y/N): ");
     }
 }
