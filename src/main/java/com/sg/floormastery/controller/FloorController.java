@@ -111,29 +111,29 @@ public class FloorController {
 
                 if(date == null){
                     String temporaryDate = view.getUserOrderDate();
-                    date = validateInput(temporaryDate, service.isDateValid(temporaryDate));
+                    date = service.isDateValid(temporaryDate) ? temporaryDate : null;
                 }
 
                 if(name == null){
                     String temporaryName = view.getUserOrderName();
-                    name = validateInput(temporaryName, service.isNameValid(temporaryName));
+                    name = service.isNameValid(temporaryName) ? temporaryName : null;
                 }
 
                 if(state == null){
                     String temporaryState = view.getUserOrderState();
-                    state = validateInput(temporaryState, service.isStateValid(temporaryState));
+                    state = service.isStateValid(temporaryState) ? temporaryState : null;
                 }
 
                 if(product == null){
                     view.displayProducts(products);
                     String temporaryProduct = view.getUserProductType();
-                    product = validateInput(temporaryProduct, service.isProductValid(temporaryProduct));
+                    product = service.isProductValid(temporaryProduct) ? temporaryProduct : null;
 
                 }
 
                 if(area == null){
                     String temporaryArea = view.getUserOrderArea();
-                    area = validateInput(temporaryArea, service.isAreaValid(temporaryArea));
+                    area = service.isAreaValid(temporaryArea) ? temporaryArea : null;
                 }
 
                 hasErrors = false;
@@ -151,8 +151,8 @@ public class FloorController {
         // Convert from string to BigDecimal now that it passed the validation
         BigDecimal areaSelected = new BigDecimal(area).setScale(2, RoundingMode.HALF_UP);
 
-        // Get all the cost data with the information from the user
-        List<BigDecimal> calculations = service.doAllCalculations(taxSelected, productSelected, areaSelected);
+        // Get all the cost data with the information from the user in the same order as the order object needs it
+        List<BigDecimal> calculations = service.doAllOrderCalculations(taxSelected, productSelected, areaSelected);
 
 
         Order order = new Order(service.getCurrentNumberOfOrders()+1,
@@ -165,10 +165,12 @@ public class FloorController {
 
         // Confirm the user wants to do the action and do it if so
         String decision = confirmAction("add");
+
         if(decision.equalsIgnoreCase("Y")){
             Order result = service.addOrder(order, date);
             view.displayActionResult(result, "added");
         }
+
     }
 
     private void editOrder(){

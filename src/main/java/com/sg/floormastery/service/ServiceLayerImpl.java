@@ -101,7 +101,7 @@ public class ServiceLayerImpl implements ServiceLayer{
     }
 
     @Override
-    public List<BigDecimal> doAllCalculations(Tax tax, Product product, BigDecimal area) {
+    public List<BigDecimal> doAllOrderCalculations(Tax tax, Product product, BigDecimal area) {
         List<BigDecimal> calculationsData = new ArrayList<>();
         BigDecimal costPerSquareFoot, laborCostPerSquareFoot, taxRate, materialCost, laborCost, taxCost,total;
 

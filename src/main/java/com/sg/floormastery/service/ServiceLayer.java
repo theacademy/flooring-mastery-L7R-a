@@ -38,6 +38,6 @@ public interface ServiceLayer {
     Order removeOrder(Order order, String date);
 
     void exportAllData();
-    List<BigDecimal> doAllCalculations(Tax tax, Product product, BigDecimal area);
+    List<BigDecimal> doAllOrderCalculations(Tax tax, Product product, BigDecimal area);
 }
 
