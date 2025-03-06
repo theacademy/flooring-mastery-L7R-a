@@ -82,13 +82,21 @@ public class ServiceLayerImpl implements ServiceLayer{
     }
 
     @Override
-    public Order editOrder(Order order) {
-        return null;
+    public Order editOrder(Order order, String date) {
+        return orders.editOrder(order, date);
     }
 
     @Override
-    public Order removeOrder(Order order) {
-        return null;
+    public Order removeOrder(Order order, String date) {
+        return orders.removeOrder(order, date);
+    }
+
+    @Override
+    public void exportAllData() {
+        final String EXPORT_FILE_PATH = "Files/Backup/ExportedData.txt";
+        orders.exportOrdersDataToFile(EXPORT_FILE_PATH);
+        products.exportProductsDataToFile(EXPORT_FILE_PATH);
+        taxes.exportTaxesDataToFile(EXPORT_FILE_PATH);
     }
 
     @Override

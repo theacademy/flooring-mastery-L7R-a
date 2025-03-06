@@ -6,6 +6,7 @@ import com.sg.floormastery.service.InvalidOrderException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.List;
 
 @Component
@@ -17,7 +18,7 @@ public class FloorView {
         this.io = io;
     }
 
-    public int displayMenu(){
+    public int displayMenu() throws InvalidOrderException{
 
         io.print("  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *");
         io.print("  * <<Flooring Program>>");
@@ -30,7 +31,12 @@ public class FloorView {
         io.print("  *");
         io.print("  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
 
-        return io.readInt("Please select from the above choices.", 1, 6);
+        try{
+            return io.readInt("Please select from the above choices.", 1, 6);
+        }
+        catch (NumberFormatException e){
+            throw new InvalidOrderException("ERROR: Input is not an integer.");
+        }
     }
 
     public void displayOrdersBanner(){
@@ -61,11 +67,11 @@ public class FloorView {
     }
 
     public String getUserOrderName(){
-        return io.readString("Great, now we need your name");
+        return io.readString("Please enter the customer name");
     }
 
     public String getUserOrderState(){
-        return io.readString("Awesome, in which state is the order. Type only the abbreviation of the state?");
+        return io.readString("Please enter the state. Type only the abbreviation of the state");
     }
 
     public String getUserOrderProduct(List<Product> products){
@@ -76,11 +82,15 @@ public class FloorView {
                 forEach((product)->io.print(
                         product.getProductType() + " " + product.getCostPerSquareFoot()+ "$ " +
                                 product.getLaborCostPerSquareFoot() + "$"));
+        return getUserProductType();
+    }
+
+    public String getUserProductType(){
         return io.readString("Please enter the product type you would like to order");
     }
 
-    public String getUserOrderArea() throws InvalidOrderException {
-        return io.readString("Finally, type the area you want to get");
+    public String getUserOrderArea(){
+        return io.readString("Please enter the area.");
     }
 
 
@@ -89,7 +99,20 @@ public class FloorView {
     }
 
     public void displayEditOrderBanner(){
+        io.print("Please fill up the following information to update the order. Leave field in blank to keep it as it is");
+    }
 
+    public void displayCurrentName(Order order){
+        io.print("The current name is:" + order.getCustomerName());
+    }
+    public void displayCurrentState(Order order){
+        io.print("The current state is: " + order.getState());
+    }
+    public void displayCurrentProductType(Order order){
+        io.print("The current product type is:" + order.getProductType());
+    }
+    public void displayCurrentArea(Order order){
+        io.print("The current area is: " + order.getArea());
     }
 
     public void displayRemoveOrderBanner(){
@@ -101,7 +124,7 @@ public class FloorView {
     }
 
     public void displayExitBanner(){
-
+        io.print("Thank you for using our services!");
     }
 
     public void displayActionResult(Order result, String action){
@@ -135,5 +158,13 @@ public class FloorView {
 
     public String confirmAction(String action){
         return io.readString("Do you want to " +action + " the order? (Y/N): ");
+    }
+
+    public void displaySuccessExportation() {
+        io.print("Data exported successfully! Check a file called ExportedData inside the Backup folder.");
+    }
+
+    public String displayPressEnterToContinue(){
+        return io.readString("Press enter to continue");
     }
 }

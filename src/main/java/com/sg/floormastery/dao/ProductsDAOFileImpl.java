@@ -4,10 +4,7 @@ import com.sg.floormastery.dto.Product;
 import com.sg.floormastery.dto.Tax;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -58,7 +55,17 @@ public class ProductsDAOFileImpl implements ProductsDAO{
         }
     }
 
-    public void exportToFile() {
-
+    public void exportProductsDataToFile(String file) throws PersistanceException {
+        try (PrintWriter out = new PrintWriter(new FileWriter(file, true))) { // Append mode
+            importFromFile();
+            out.println("[PRODUCTS]"); // Section title
+            for (Product product : storage.values()) {
+                out.println(product.getProductType()+","+product.getCostPerSquareFoot()+","
+                +product.getLaborCostPerSquareFoot());
+            }
+            out.println(); // Blank line for separation
+        } catch (IOException e) {
+            throw new PersistanceException("ERROR: Could not export products data.");
+        }
     }
 }

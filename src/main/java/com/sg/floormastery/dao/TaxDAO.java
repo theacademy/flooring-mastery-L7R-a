@@ -11,4 +11,6 @@ public interface TaxDAO {
     Tax addStateTaxEntry(String stateCode, BigDecimal taxRate);
     Tax getTax(String stateCode);
     HashSet<String> getStatesAbbreviation();
+    void exportTaxesDataToFile(String file);
+
 }

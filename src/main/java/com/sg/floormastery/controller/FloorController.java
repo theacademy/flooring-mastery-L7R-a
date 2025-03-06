@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class FloorController {
@@ -59,11 +61,20 @@ public class FloorController {
     }
 
     private int getMenuOption(){
-        return view.displayMenu();
+        try{
+            return view.displayMenu();
+        }
+        catch (InvalidOrderException e){
+            view.displayErrorMessage(e.getMessage());
+            view.displayPressEnterToContinue();
+            return -1;
+        }
     }
     private void displayOrders(){
         view.displayOrdersBanner();
-        List<Order> userOrders = getOrdersByDate();
+        Map<String, List<Order>> dateOrdersMap = getOrdersByDate();
+        String date = dateOrdersMap.keySet().iterator().next();
+        List<Order> userOrders = dateOrdersMap.get(date);
         view.displayOrders(userOrders);
     }
 
@@ -77,7 +88,6 @@ public class FloorController {
 
     private void addOrder() {
         // Setting up variables to add the order
-        List<String> orderData = new ArrayList<>();
         List<Product> products = service.getProducts();
         String date, name, state, product, area;
         date = name = state = product = area = null;
@@ -157,13 +167,14 @@ public class FloorController {
     private void editOrder(){
         view.displayEditOrderBanner();
         Integer orderNumber = null;
-        List<Order> orders = getOrdersByDate();
-
-
-        // If there are no orders with this date exit
-        if(orders == null){
+        Map<String, List<Order>> dateOrdersMap = getOrdersByDate();
+        if(dateOrdersMap.isEmpty()){
             return;
         }
+
+        String date = dateOrdersMap.keySet().iterator().next();
+        List<Order> orders = dateOrdersMap.get(date);
+
 
         orderNumber = getOrderNumber();
         Order order = service.getOrder(orderNumber);
@@ -174,31 +185,106 @@ public class FloorController {
             return;
         }
 
-
-
-
         view.displayOrderInformation(order);
         String performAction = "";
         do{
-            performAction = view.confirmAction("add");
+            performAction = view.confirmAction("edit");
         }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
 
-        Order result = service.editOrder(order);
+        String newName, newState, newProductType, newArea;
+        newName = newState = newProductType = newArea = null;
+
+        boolean hasErrors = false;
+
+        view.displayAddOrderBanner();
+
+        do {
+            try {
+                if(newName == null){
+                    view.displayCurrentName(order);
+                    String temporaryName = view.getUserOrderName();
+                    if(temporaryName.equals("")){
+                        newName = order.getCustomerName();
+                    }
+                    else{
+                        newName = validateInput(temporaryName, service.isNameValid(temporaryName));
+                    }
+                }
+                if(newState == null){
+                    view.displayCurrentState(order);
+                    String temporaryState = view.getUserOrderState();
+                    if(temporaryState.equals("")){
+                        newState = order.getState();
+                    }
+                    else{
+                        newState = validateInput(temporaryState, service.isStateValid(temporaryState));
+                    }
+
+                }
+                if(newProductType == null){
+                    view.displayCurrentProductType(order);
+                    String temporaryProduct = view.getUserProductType();
+                    if(temporaryProduct.equals("")){
+                        newProductType = order.getProductType();
+                    }
+                    else{
+                        newProductType = validateInput(temporaryProduct, service.isProductValid(temporaryProduct));
+                    }
+                }
+                if(newArea == null){
+                    String temporaryArea = view.getUserOrderArea();
+                    if(temporaryArea.equals("")){
+                        newArea = String.valueOf(order.getArea());
+                    }
+                    else{
+                        newArea = validateInput(temporaryArea, service.isAreaValid(temporaryArea));
+                    }
+                }
+                hasErrors = false;
+            } catch (InvalidOrderException | PersistanceException e) {
+                hasErrors = true;
+                view.displayErrorMessage(e.getMessage());
+            }
+        } while (hasErrors);
+
+        Tax taxSelected = service.getTax(newState);
+        Product productSelected = service.getProduct(newProductType);
+
+
+        BigDecimal areaSelected, costPerSquareFoot, laborCostPerSquareFoot, taxRate, materialCost, laborCost, tax,total;
+
+        areaSelected = new BigDecimal(newArea).setScale(2, RoundingMode.HALF_UP);
+        costPerSquareFoot = productSelected.getCostPerSquareFoot();
+        laborCostPerSquareFoot = productSelected.getLaborCostPerSquareFoot();
+        taxRate = taxSelected.getTaxRate();
+
+        materialCost = service.calMaterialCost(areaSelected, costPerSquareFoot);
+        laborCost = service.calLaborCost(areaSelected, laborCostPerSquareFoot);
+        tax = service.calTax(materialCost, laborCost, taxRate);
+        total = service.calTotal(materialCost, laborCost, tax);
+
+        Order newOrder = new Order(order.getOrderNumber(),
+                newName, newState, taxRate, newProductType, areaSelected,
+                costPerSquareFoot, laborCostPerSquareFoot,
+                materialCost, laborCost, tax, total);
+
+
+        Order result = service.editOrder(newOrder, date);
         view.displayActionResult(result, "edited");
 
     }
 
     private void removeOrder(){
         view.displayRemoveOrderBanner();
-        Integer orderNumber = null;
-        List<Order> orders = getOrdersByDate();
-
-
-        // If there are no orders with this date
-        if(orders == null){
-            view.displayErrorMessage("No order has this date");
+        Map<String, List<Order>> dateOrdersMap = getOrdersByDate();
+        if(dateOrdersMap.isEmpty()){
             return;
+
+
         }
+        Integer orderNumber = null;
+        String date = dateOrdersMap.keySet().iterator().next();
+        List<Order> orders = dateOrdersMap.get(date);
 
         orderNumber = getOrderNumber();
         Order order = service.getOrder(orderNumber);
@@ -217,11 +303,11 @@ public class FloorController {
             performAction = view.confirmAction("remove");
         }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
 
-        Order result = service.removeOrder(order);
+        Order result = service.removeOrder(order, date);
         view.displayActionResult(result, "removed");
     }
 
-    private List<Order> getOrdersByDate(){
+    private Map<String, List<Order>> getOrdersByDate(){
 
         boolean hasErrors = false;
         String date = null;
@@ -231,6 +317,9 @@ public class FloorController {
                 String temporaryDate = view.getUserOrderDate();
                 date = validateInput(temporaryDate, service.isExistingDateValid(temporaryDate));
                 orders = service.getOrders(date);
+                if(orders.isEmpty()){
+                    throw new PersistanceException("ERROR: There are no orders with this date!");
+                }
                 hasErrors = false;
             } catch (InvalidOrderException | PersistanceException e) {
                 hasErrors = true;
@@ -238,7 +327,9 @@ public class FloorController {
             }
         } while (hasErrors);
 
-        return orders;
+        Map<String, List<Order>> dateOrdersMap = new HashMap<>();
+        dateOrdersMap.put(date, orders);
+        return dateOrdersMap;
     }
 
     private Integer getOrderNumber(){
@@ -262,10 +353,17 @@ public class FloorController {
     }
 
     private void exportAllData(){
-
+        try{
+            service.exportAllData();
+            view.displaySuccessExportation();
+        }
+        catch (PersistanceException e){
+            view.displayErrorMessage(e.getMessage());
+        }
     }
 
     private void quit(){
+        view.displayExitBanner();
         return;
     }
 }

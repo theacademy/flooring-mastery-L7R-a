@@ -34,7 +34,9 @@ public interface ServiceLayer {
 
     Order getOrder(Integer orderNumber);
 
-    Order editOrder(Order order);
-    Order removeOrder(Order order);
+    Order editOrder(Order order, String date);
+    Order removeOrder(Order order, String date);
+
+    void exportAllData();
 }
 

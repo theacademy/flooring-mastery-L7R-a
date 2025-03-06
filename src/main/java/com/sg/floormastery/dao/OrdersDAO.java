@@ -12,8 +12,9 @@ public interface OrdersDAO {
 
     Order getOrder(Integer number);
     Order addOrder(Order order, String date);
-    Order editOrder(Integer oldOrderNumber, Object newOrder);
-    Order removeOrder(Integer orderNumber);
+    Order editOrder(Order newOrder, String date);
+    Order removeOrder(Order orderToRemove, String date) ;
     List<Order> getOrderByDate(String date);
     int getCurrentNumberOfOrders();
+    void exportOrdersDataToFile(String file);
 }

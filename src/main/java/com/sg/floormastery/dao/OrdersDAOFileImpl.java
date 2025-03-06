@@ -1,7 +1,6 @@
 package com.sg.floormastery.dao;
 
 import com.sg.floormastery.dto.Order;
-import com.sg.floormastery.dto.Product;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -39,7 +38,7 @@ public class OrdersDAOFileImpl implements OrdersDAO{
 
     @Override
     public Order getOrder(Integer number) {
-        return null;
+        return storage.get(number);
     }
 
     @Override
@@ -78,13 +77,78 @@ public class OrdersDAOFileImpl implements OrdersDAO{
     }
 
     @Override
-    public Order editOrder(Integer oldOrderNumber, Object newOrder) {
-        return null;
+    public Order editOrder(Order newOrder, String date) throws PersistanceException {
+        String[] fields = date.split("-");
+        String filePath = ORDER_FILE_PATH + "Orders_" + fields[0] + fields[1] + fields[2] + ".txt";
+
+        File orderFile = new File(filePath);
+        List<Order> orders = importFromFiles(filePath); // Load all orders
+
+        boolean orderNotFound = orders.stream().noneMatch(order -> order.getOrderNumber() == newOrder.getOrderNumber());
+        if(orderNotFound){
+            throw new PersistanceException("ERROR: Order number " + newOrder.getOrderNumber() + " not found for date " + date);
+        }
+
+        // Replace the old order with the new one
+        for (int i = 0; i < orders.size(); i++) {
+            if (orders.get(i).getOrderNumber() == newOrder.getOrderNumber()) {
+                orders.set(i, newOrder);
+                break;
+            }
+        }
+
+        // Write the updated list back to the file
+        try (PrintWriter out = new PrintWriter(new FileWriter(orderFile))) {
+            for (Order order : orders) {
+                out.println(formatOrderForFile(order)); // Rewrite each order
+            }
+        } catch (IOException e) {
+            throw new PersistanceException("ERROR: Problem writing to the orders file");
+        }
+
+        storage.put(newOrder.getOrderNumber(), newOrder); // Update in-memory storage
+        return newOrder;
     }
 
     @Override
-    public Order removeOrder(Integer orderNumber) {
-        return null;
+    public Order removeOrder(Order orderToRemove, String date) throws PersistanceException {
+        String[] fields = date.split("-");
+        String filePath = ORDER_FILE_PATH + "Orders_" + fields[0] + fields[1] + fields[2] + ".txt";
+
+        File orderFile = new File(filePath);
+        List<Order> orders = importFromFiles(filePath); // Load all orders from file
+
+        boolean orderFound = false;
+        Order removedOrder = null;
+
+        // Create a new list without the removed order
+        List<Order> updatedOrders = new ArrayList<>();
+        for (Order o : orders) {
+            if (o.getOrderNumber() == orderToRemove.getOrderNumber()) {
+                removedOrder = o;
+                orderFound = true;
+            } else {
+                updatedOrders.add(o);
+            }
+        }
+
+        if (!orderFound) {
+            throw new PersistanceException("ERROR: Order number " + orderToRemove.getOrderNumber() + " not found for date " + date);
+        }
+
+        // Rewrite the file with the updated orders
+        try (PrintWriter out = new PrintWriter(new FileWriter(orderFile))) {
+            for (Order o : updatedOrders) {
+                out.println(formatOrderForFile(o));
+            }
+        } catch (IOException e) {
+            throw new PersistanceException("ERROR: Problem writing to the orders file");
+        }
+
+        // Remove from in-memory storage
+        storage.remove(orderToRemove.getOrderNumber());
+
+        return removedOrder; // Return the removed order
     }
 
     @Override
@@ -137,5 +201,17 @@ public class OrdersDAOFileImpl implements OrdersDAO{
             throw new PersistanceException("ERROR: Problem reading the orders file");
         }
         return orders;
+    }
+
+    public void exportOrdersDataToFile(String file) throws PersistanceException {
+        try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+            out.println("[ORDERS]"); // Section title
+            for (Order order : storage.values()) {
+                out.println(formatOrderForFile(order));
+            }
+            out.println(); // Blank line for separation
+        } catch (IOException e) {
+            throw new PersistanceException("ERROR: Could not export orders data.");
+        }
     }
 }

@@ -4,10 +4,7 @@ import com.sg.floormastery.dto.Product;
 import com.sg.floormastery.dto.Tax;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -56,7 +53,16 @@ public class TaxDAOFileImpl implements TaxDAO{
         }
     }
 
-    public void exportToFile() {
-
+    public void exportTaxesDataToFile(String file) throws PersistanceException {
+        try (PrintWriter out = new PrintWriter(new FileWriter(file, true))) { // Append mode
+            importFromFile();
+            out.println("[TAXES]"); // Section title
+            for (Tax tax : storage.values()) {
+                out.println(tax.getStateAbbreviation()+","+tax.getStateName()+","+ tax.getTaxRate());
+            }
+            out.println(); // Blank line for separation
+        } catch (IOException e) {
+            throw new PersistanceException("ERROR: Could not export taxes data.");
+        }
     }
 }
