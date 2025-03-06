@@ -11,7 +11,7 @@ public interface OrdersDAO {
     HashMap<Integer, Order> storage = new HashMap<>();
 
     Order getOrder(Integer number);
-    Order addOrder(Order order);
+    Order addOrder(Order order, String date);
     Order editOrder(Integer oldOrderNumber, Object newOrder);
     Order removeOrder(Integer orderNumber);
     List<Order> getOrderByDate(String date);

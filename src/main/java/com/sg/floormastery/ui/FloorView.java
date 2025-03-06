@@ -33,14 +33,21 @@ public class FloorView {
         return io.readInt("Please select from the above choices.", 1, 6);
     }
 
-    public String displayOrdersBanner(){
-        return io.readString("Enter the date you want to see orders (Date must be of format MM-DD-YYYY): ");
+    public void displayOrdersBanner(){
+        io.print("Starting the displaying order command...");
     }
 
     public void displayOrders(List<Order> orders){
-        io.print("Here are your orders");
+        io.print("Here are your orders. The details of each order are separated with ',' and they represent the following in order:");
+        io.print("ID, customer name, state, tax rate, product type, area, cost per square foot, labor cost per square foot,"+
+                "material cost, labor cost, tax, and total cost respectively\n");
         orders.stream().
-                forEach((order)->io.print("Order ID:" + order.getOrderNumber() + "Customer Name:" + order.getCustomerName()));
+                forEach((order)->io.print(order.getOrderNumber() + ", " + order.getCustomerName() + ", "+
+                        order.getState() + ", " + order.getTaxRate() + "%, " + order.getProductType() + ", " +
+                        order.getArea() + " sq ft, " + order.getCostPerSquareFoot() + "$, " + order.getLaborCostPerSquareFoot()
+                        + "$, "+  order.getMaterialCost() + "$, " + order.getLaborCost() + "$, " + order.getTax() + "$, " +
+                        order.getTotal()+"$\n"));
+        io.readString("Press enter to continue");
     }
 
 

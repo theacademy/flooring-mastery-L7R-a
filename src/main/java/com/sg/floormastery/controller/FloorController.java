@@ -62,8 +62,8 @@ public class FloorController {
         return view.displayMenu();
     }
     private void displayOrders(){
-        String userDate = view.displayOrdersBanner();
-        List<Order> userOrders = service.getOrders(userDate);
+        view.displayOrdersBanner();
+        List<Order> userOrders = getOrdersByDate();
         view.displayOrders(userOrders);
     }
 
@@ -148,19 +148,20 @@ public class FloorController {
             performAction = view.confirmAction("add");
         }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
 
-        Order result = service.addOrder(order);
-        view.displayActionResult(result, "added");
+        if(performAction.equalsIgnoreCase("Y")){
+            Order result = service.addOrder(order, date);
+            view.displayActionResult(result, "added");
+        }
     }
 
     private void editOrder(){
+        view.displayEditOrderBanner();
         Integer orderNumber = null;
-        List<Order> orders = getOrdersDate();
+        List<Order> orders = getOrdersByDate();
 
-        view.displayRemoveOrderBanner();
 
-        // If there are no orders with this date
+        // If there are no orders with this date exit
         if(orders == null){
-            view.displayErrorMessage("No order has this date");
             return;
         }
 
@@ -174,7 +175,8 @@ public class FloorController {
         }
 
 
-        
+
+
         view.displayOrderInformation(order);
         String performAction = "";
         do{
@@ -187,10 +189,10 @@ public class FloorController {
     }
 
     private void removeOrder(){
-        Integer orderNumber = null;
-        List<Order> orders = getOrdersDate();
-
         view.displayRemoveOrderBanner();
+        Integer orderNumber = null;
+        List<Order> orders = getOrdersByDate();
+
 
         // If there are no orders with this date
         if(orders == null){
@@ -215,18 +217,20 @@ public class FloorController {
             performAction = view.confirmAction("remove");
         }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
 
-        Order result = service.addOrder(order);
+        Order result = service.removeOrder(order);
         view.displayActionResult(result, "removed");
     }
 
-    private List<Order> getOrdersDate(){
+    private List<Order> getOrdersByDate(){
 
         boolean hasErrors = false;
         String date = null;
+        List<Order> orders = null;
         do {
             try {
                 String temporaryDate = view.getUserOrderDate();
-                date = validateInput(temporaryDate, service.isDateValid(temporaryDate));
+                date = validateInput(temporaryDate, service.isExistingDateValid(temporaryDate));
+                orders = service.getOrders(date);
                 hasErrors = false;
             } catch (InvalidOrderException | PersistanceException e) {
                 hasErrors = true;
@@ -234,7 +238,7 @@ public class FloorController {
             }
         } while (hasErrors);
 
-        return service.getOrders(date);
+        return orders;
     }
 
     private Integer getOrderNumber(){

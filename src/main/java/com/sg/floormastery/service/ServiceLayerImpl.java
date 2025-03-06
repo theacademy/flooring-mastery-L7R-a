@@ -55,7 +55,7 @@ public class ServiceLayerImpl implements ServiceLayer{
     }
 
     @Override
-    public List<Order> getOrders(String date) {
+    public List<Order> getOrders(String date)  throws PersistanceException{
         return orders.getOrderByDate(date);
     }
 
@@ -82,8 +82,18 @@ public class ServiceLayerImpl implements ServiceLayer{
     }
 
     @Override
-    public Order addOrder(Order order) {
-       return orders.addOrder(order);
+    public Order editOrder(Order order) {
+        return null;
+    }
+
+    @Override
+    public Order removeOrder(Order order) {
+        return null;
+    }
+
+    @Override
+    public Order addOrder(Order order, String date) {
+       return orders.addOrder(order, date);
     }
 
 
@@ -97,6 +107,17 @@ public class ServiceLayerImpl implements ServiceLayer{
             if (today.isAfter(userDate) || today.equals(userDate)) {
                 throw new InvalidOrderException("ERROR: The date must be set to be in the future");
             }
+        } catch (DateTimeParseException e) {
+            throw new InvalidOrderException("ERROR: Invalid date format. Please use MM-dd-yyyy.");
+        }
+        return true;
+    }
+
+    public boolean isExistingDateValid(String userInput)  throws InvalidOrderException{
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+        LocalDate today = LocalDate.now();
+        try {
+            LocalDate userDate = LocalDate.parse(userInput, formatter);
         } catch (DateTimeParseException e) {
             throw new InvalidOrderException("ERROR: Invalid date format. Please use MM-dd-yyyy.");
         }

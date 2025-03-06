@@ -20,8 +20,9 @@ public interface ServiceLayer {
     List<Order> getOrders(String date);
     List<Product> getProducts();
     Tax getTax(String stateCode);
-    Order addOrder(Order order);
+    Order addOrder(Order order, String date);
     boolean isDateValid(String userInput) throws InvalidOrderException;
+    public boolean isExistingDateValid(String userInput)  throws InvalidOrderException;
     boolean isNameValid(String userInput) throws InvalidOrderException;
     boolean isStateValid(String userInput) throws InvalidOrderException;
     boolean isProductValid(String userInput) throws InvalidOrderException;
@@ -34,5 +35,6 @@ public interface ServiceLayer {
     Order getOrder(Integer orderNumber);
 
     Order editOrder(Order order);
+    Order removeOrder(Order order);
 }
 

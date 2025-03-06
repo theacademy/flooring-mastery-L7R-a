@@ -4,8 +4,7 @@ import com.sg.floormastery.dto.Order;
 import com.sg.floormastery.dto.Product;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,17 +12,69 @@ import java.util.Scanner;
 
 @Component
 public class OrdersDAOFileImpl implements OrdersDAO{
-    public String ORDER_FILE_PATH = "Files/Orders/Orders_";
+    public String ORDER_FILE_PATH = "Files/Orders/";
     final static String DELIMITER = ",";
+    public int currentSize = 0;
+
+
+    public OrdersDAOFileImpl() {
+        loadAllOrders();
+    }
+
+    private void loadAllOrders() {
+        File folder = new File(ORDER_FILE_PATH);
+        File[] listOfFiles = folder.listFiles((dir, name) -> name.startsWith("Orders_") && name.endsWith(".txt"));
+
+        if (listOfFiles != null) {
+            for (File file : listOfFiles) {
+                List<Order> orders = importFromFiles(file.getAbsolutePath());
+                for(Order order : orders){
+                    storage.put(order.getOrderNumber(), order);
+                }
+            }
+        }
+
+        currentSize = storage.size();
+    }
+
     @Override
     public Order getOrder(Integer number) {
         return null;
     }
 
     @Override
-    public Order addOrder(Order order) {
-        storage.put(order.getOrderNumber(), order);
+    public Order addOrder(Order order, String date) {
+        String[] fields = date.split("-");
+        String filePath = ORDER_FILE_PATH + "Orders_"+fields[0] + fields[1] + fields[2] + ".txt";
+
+        File orderFile = new File(filePath);
+        try {
+            PrintWriter out = new PrintWriter(new FileWriter(orderFile, true));
+            // Append order details to file
+            out.println(formatOrderForFile(order));
+            out.flush();
+            storage.put(order.getOrderNumber(), order);
+        }
+        catch (IOException e ) {
+                throw new PersistanceException("ERROR: Problem reading the orders file");
+            }
+
         return order;
+    }
+
+    private String formatOrderForFile(Order order) {
+        return order.getOrderNumber() + DELIMITER +
+                order.getCustomerName() + DELIMITER +
+                order.getState() + DELIMITER +
+                order.getTaxRate() + DELIMITER +
+                order.getProductType() + DELIMITER +
+                order.getArea() + DELIMITER +
+                order.getCostPerSquareFoot() + DELIMITER +
+                order.getLaborCostPerSquareFoot() + DELIMITER +
+                order.getMaterialCost() + DELIMITER +
+                order.getLaborCost() + DELIMITER +
+                order.getTax() + DELIMITER +
+                order.getTotal();
     }
 
     @Override
@@ -37,12 +88,12 @@ public class OrdersDAOFileImpl implements OrdersDAO{
     }
 
     @Override
-    public List<Order> getOrderByDate(String date) {
+    public List<Order> getOrderByDate(String date)  throws PersistanceException{
         // Date should be YY-MM-DD format
         String[] fields = date.split("-");
 
-        String file = ORDER_FILE_PATH+fields[0]+fields[1]+fields[2]+".txt";
-        return importFromFile(file);
+        String file = ORDER_FILE_PATH+"Orders_"+fields[0]+fields[1]+fields[2]+".txt";
+        return importFromFiles(file);
     }
 
     @Override
@@ -50,10 +101,10 @@ public class OrdersDAOFileImpl implements OrdersDAO{
         return storage.size();
     }
 
-    public List<Order> importFromFile(String file) {
+    public List<Order> importFromFiles(String file)  throws PersistanceException{
+        List<Order> orders = new ArrayList<>();
         try{
             Scanner sc = new Scanner(new BufferedReader(new FileReader(file)));
-            storage.clear();
             while(sc.hasNextLine()){
                 String s = sc.nextLine();
                 String[] fields = s.split(DELIMITER);
@@ -76,13 +127,15 @@ public class OrdersDAOFileImpl implements OrdersDAO{
                         laborCostPerSquareFoot, materialCost,
                         laborCost, tax, total
                 );
-
-                storage.put(order.getOrderNumber(), order);
+                orders.add(order);
             }
         }
-        catch (Exception e){
-            System.out.println(e);
+        catch (FileNotFoundException e){
+            throw new PersistanceException("ERROR: There is no file with this date.");
         }
-        return new ArrayList<>(storage.values());
+        catch (IOException | NumberFormatException e ) {
+            throw new PersistanceException("ERROR: Problem reading the orders file");
+        }
+        return orders;
     }
 }
