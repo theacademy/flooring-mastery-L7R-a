@@ -15,6 +15,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -97,6 +98,30 @@ public class ServiceLayerImpl implements ServiceLayer{
         orders.exportOrdersDataToFile(EXPORT_FILE_PATH);
         products.exportProductsDataToFile(EXPORT_FILE_PATH);
         taxes.exportTaxesDataToFile(EXPORT_FILE_PATH);
+    }
+
+    @Override
+    public List<BigDecimal> doAllCalculations(Tax tax, Product product, BigDecimal area) {
+        List<BigDecimal> calculationsData = new ArrayList<>();
+        BigDecimal costPerSquareFoot, laborCostPerSquareFoot, taxRate, materialCost, laborCost, taxCost,total;
+
+        costPerSquareFoot = product.getCostPerSquareFoot();
+        laborCostPerSquareFoot = product.getLaborCostPerSquareFoot();
+        taxRate = tax.getTaxRate();
+
+        materialCost = calMaterialCost(area, costPerSquareFoot);
+        laborCost = calLaborCost(area, laborCostPerSquareFoot);
+        taxCost = calTax(materialCost, laborCost, taxRate);
+        total = calTotal(materialCost, laborCost, taxCost);
+
+        calculationsData.add(taxRate);
+        calculationsData.add(costPerSquareFoot);
+        calculationsData.add(laborCostPerSquareFoot);
+        calculationsData.add(materialCost);
+        calculationsData.add(laborCost);
+        calculationsData.add(taxCost);
+        calculationsData.add(total);
+        return calculationsData;
     }
 
     @Override

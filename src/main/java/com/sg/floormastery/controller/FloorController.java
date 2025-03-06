@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +105,8 @@ public class FloorController {
         do {
             /* In each if statement, first store any user input.
             * Then check if the service validates it.
-            * If yes, then store it in the final variable, else it is an error */
+            * If yes, then store it in the final variable,
+            * else it is an error and user tries again */
             try {
 
                 if(date == null){
@@ -142,35 +144,28 @@ public class FloorController {
             }
         } while (hasErrors);
 
+        // Create tax and product objects to get the detail cost for that state and product type
         Tax taxSelected = service.getTax(state);
         Product productSelected = service.getProduct(product);
 
+        // Convert from string to BigDecimal now that it passed the validation
+        BigDecimal areaSelected = new BigDecimal(area).setScale(2, RoundingMode.HALF_UP);
 
-        BigDecimal areaSelected, costPerSquareFoot, laborCostPerSquareFoot, taxRate, materialCost, laborCost, tax,total;
+        // Get all the cost data with the information from the user
+        List<BigDecimal> calculations = service.doAllCalculations(taxSelected, productSelected, areaSelected);
 
-        areaSelected = new BigDecimal(area).setScale(2, RoundingMode.HALF_UP);
-        costPerSquareFoot = productSelected.getCostPerSquareFoot();
-        laborCostPerSquareFoot = productSelected.getLaborCostPerSquareFoot();
-        taxRate = taxSelected.getTaxRate();
-
-        materialCost = service.calMaterialCost(areaSelected, costPerSquareFoot);
-        laborCost = service.calLaborCost(areaSelected, laborCostPerSquareFoot);
-        tax = service.calTax(materialCost, laborCost, taxRate);
-        total = service.calTotal(materialCost, laborCost, tax);
 
         Order order = new Order(service.getCurrentNumberOfOrders()+1,
-                name, state, taxRate, product, areaSelected,
-                costPerSquareFoot, laborCostPerSquareFoot,
-                materialCost, laborCost, tax, total);
+                name, state, calculations.get(0), product, areaSelected,
+                calculations.get(1), calculations.get(2),
+                calculations.get(3), calculations.get(4), calculations.get(5), calculations.get(6));
 
 
         view.displayOrderInformation(order);
-        String performAction = "";
-        do{
-            performAction = view.confirmAction("add");
-        }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
 
-        if(performAction.equalsIgnoreCase("Y")){
+        // Confirm the user wants to do the action and do it if so
+        String decision = confirmAction("add");
+        if(decision.equalsIgnoreCase("Y")){
             Order result = service.addOrder(order, date);
             view.displayActionResult(result, "added");
         }
@@ -338,6 +333,14 @@ public class FloorController {
     // **** MAIN METHODS END **** //
 
     // **** HELPER METHODS START **** //
+    private String confirmAction(String action){
+        String performAction = "";
+        do{
+            performAction = view.confirmAction(action);
+        }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
+
+        return performAction;
+    }
 
     private Map<String, List<Order>> getOrders(){
 
