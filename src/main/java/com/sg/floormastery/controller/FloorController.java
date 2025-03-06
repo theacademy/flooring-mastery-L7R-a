@@ -9,10 +9,8 @@ import com.sg.floormastery.service.ServiceLayer;
 import com.sg.floormastery.ui.FloorView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +27,9 @@ public class FloorController {
         this.service = service;
     }
 
+    // **** SELECT ACTION METHODS START **** //
 
+    // Execute one of the main CRUD methods using output from getMenuOption
     public void run(){
         boolean keep = true;
 
@@ -60,6 +60,7 @@ public class FloorController {
         }
     }
 
+    // Get user menu input as an int
     private int getMenuOption(){
         try{
             return view.displayMenu();
@@ -70,60 +71,71 @@ public class FloorController {
             return -1;
         }
     }
+
+    // **** SELECT ACTION METHODS END **** //
+
+
+    // **** MAIN METHODS START **** //
+
     private void displayOrders(){
         view.displayOrdersBanner();
-        Map<String, List<Order>> dateOrdersMap = getOrdersByDate();
+
+        // getOrders gives the orders to display as a hashMap with only 1 key (date).
+        Map<String, List<Order>> dateOrdersMap = getOrders();
         String date = dateOrdersMap.keySet().iterator().next();
         List<Order> userOrders = dateOrdersMap.get(date);
+
         view.displayOrders(userOrders);
     }
 
-    // Given an input and a validation from the service layer, return the input if it passed the validation
-    private String validateInput(String input, boolean validation) throws InvalidOrderException{
-        if(validation){
-            return input;
-        }
-        return null;
-    }
-
     private void addOrder() {
-        // Setting up variables to add the order
-        List<Product> products = service.getProducts();
-        String date, name, state, product, area;
-        date = name = state = product = area = null;
-        boolean hasErrors = false;
-
         view.displayAddOrderBanner();
 
+        // All products available
+        List<Product> products = service.getProducts();
+
+        // Variables that take user input values
+        String date, name, state, product, area;
+        date = name = state = product = area = null;
+
+        boolean hasErrors = false;
+
+
         do {
-            /* User types their input and is stored in a temporary variable.
-             If it passed the service layer validation,
-             Then it will be stored in the definitive variable, else it is an error */
+            /* In each if statement, first store any user input.
+            * Then check if the service validates it.
+            * If yes, then store it in the final variable, else it is an error */
             try {
+
                 if(date == null){
                     String temporaryDate = view.getUserOrderDate();
                     date = validateInput(temporaryDate, service.isDateValid(temporaryDate));
                 }
+
                 if(name == null){
                     String temporaryName = view.getUserOrderName();
                     name = validateInput(temporaryName, service.isNameValid(temporaryName));
                 }
+
                 if(state == null){
                     String temporaryState = view.getUserOrderState();
                     state = validateInput(temporaryState, service.isStateValid(temporaryState));
-
                 }
+
                 if(product == null){
-                    String temporaryProduct = view.getUserOrderProduct(products);
+                    view.displayProducts(products);
+                    String temporaryProduct = view.getUserProductType();
                     product = validateInput(temporaryProduct, service.isProductValid(temporaryProduct));
 
                 }
+
                 if(area == null){
                     String temporaryArea = view.getUserOrderArea();
                     area = validateInput(temporaryArea, service.isAreaValid(temporaryArea));
-
                 }
+
                 hasErrors = false;
+
             } catch (InvalidOrderException | PersistanceException e) {
                 hasErrors = true;
                 view.displayErrorMessage(e.getMessage());
@@ -167,7 +179,7 @@ public class FloorController {
     private void editOrder(){
         view.displayEditOrderBanner();
         Integer orderNumber = null;
-        Map<String, List<Order>> dateOrdersMap = getOrdersByDate();
+        Map<String, List<Order>> dateOrdersMap = getOrders();
         if(dateOrdersMap.isEmpty()){
             return;
         }
@@ -232,6 +244,7 @@ public class FloorController {
                     }
                 }
                 if(newArea == null){
+                    view.displayCurrentArea(order);
                     String temporaryArea = view.getUserOrderArea();
                     if(temporaryArea.equals("")){
                         newArea = String.valueOf(order.getArea());
@@ -276,7 +289,7 @@ public class FloorController {
 
     private void removeOrder(){
         view.displayRemoveOrderBanner();
-        Map<String, List<Order>> dateOrdersMap = getOrdersByDate();
+        Map<String, List<Order>> dateOrdersMap = getOrders();
         if(dateOrdersMap.isEmpty()){
             return;
 
@@ -307,7 +320,26 @@ public class FloorController {
         view.displayActionResult(result, "removed");
     }
 
-    private Map<String, List<Order>> getOrdersByDate(){
+    private void exportAllData(){
+        try{
+            service.exportAllData();
+            view.displaySuccessExportation();
+        }
+        catch (PersistanceException e){
+            view.displayErrorMessage(e.getMessage());
+        }
+    }
+
+    private void quit(){
+        view.displayExitBanner();
+        return;
+    }
+
+    // **** MAIN METHODS END **** //
+
+    // **** HELPER METHODS START **** //
+
+    private Map<String, List<Order>> getOrders(){
 
         boolean hasErrors = false;
         String date = null;
@@ -352,18 +384,13 @@ public class FloorController {
         return number;
     }
 
-    private void exportAllData(){
-        try{
-            service.exportAllData();
-            view.displaySuccessExportation();
+    // Given an input and a validation from the service layer, return the input if it passed the validation
+    private String validateInput(String input, boolean validation) throws InvalidOrderException{
+        if(validation){
+            return input;
         }
-        catch (PersistanceException e){
-            view.displayErrorMessage(e.getMessage());
-        }
+        return null;
     }
 
-    private void quit(){
-        view.displayExitBanner();
-        return;
-    }
+    // **** HELPER METHODS END **** //
 }
