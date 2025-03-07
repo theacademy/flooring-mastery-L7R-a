@@ -82,7 +82,7 @@ public class FloorController {
         view.displayOrders(userOrders);
     }
 
-    private void addOrder() {
+    private void addOrder() throws PersistanceException {
         view.displayAddOrderBanner();
 
         // All products available
@@ -151,7 +151,7 @@ public class FloorController {
 
     }
 
-    private void editOrder(){
+    private void editOrder() throws PersistanceException{
         view.displayEditOrderBanner();
 
         boolean hasErrors = false;
@@ -250,7 +250,7 @@ public class FloorController {
 
     }
 
-    private void removeOrder(){
+    private void removeOrder() throws PersistanceException{
         view.displayRemoveOrderBanner();
 
         // Variables used to find the order to update
@@ -274,7 +274,7 @@ public class FloorController {
         view.displayActionResult(result, "removed");
     }
 
-    private void exportAllData(){
+    private void exportAllData() throws PersistanceException{
         service.exportAllData();
         view.displaySuccessExportation();
     }

@@ -12,7 +12,8 @@ import java.util.Scanner;
 
 @Component
 public class OrdersDAOFileImpl implements OrdersDAO{
-    // Key is the object number and the value is the order itself
+
+    // Key is the order number and the value is the order itself
     private HashMap<Integer, Order> storage = new HashMap<>();
     public String ORDER_FILE_PATH = "Files/Orders/";
     final static String DELIMITER = ",";
@@ -25,10 +26,17 @@ public class OrdersDAOFileImpl implements OrdersDAO{
 
     private void loadAllOrders() {
         File folder = new File(ORDER_FILE_PATH);
-        File[] listOfFiles = folder.listFiles((dir, name) -> name.startsWith("Orders_") && name.endsWith(".txt"));
+
+        // Using lambda and listFiles to get all the files in the folder.
+        // Then check if the names of each file matches the condition.
+        // Dir is the folder directory where the files are
+        File[] listOfFiles = folder.
+                listFiles((dir, name) -> name.startsWith("Orders_") && name.endsWith(".txt"));
+
 
         if (listOfFiles != null) {
             for (File file : listOfFiles) {
+                // Using absolute path to convert the file to a string
                 List<Order> orders = importFromFiles(file.getAbsolutePath());
                 for(Order order : orders){
                     storage.put(order.getOrderNumber(), order);
@@ -44,24 +52,110 @@ public class OrdersDAOFileImpl implements OrdersDAO{
         return storage.get(number);
     }
 
+
+    //**** MAIN METHODS START****//
     @Override
-    public Order addOrder(Order order, String date) {
+    public Order addOrder(Order order, String date)throws PersistanceException {
+        // Get the file
         String[] fields = date.split("-");
         String filePath = ORDER_FILE_PATH + "Orders_"+fields[0] + fields[1] + fields[2] + ".txt";
 
+        // Create/Overwrite file with the order
         File orderFile = new File(filePath);
+        addOrderToFile(orderFile, order);
+
+        // Store order in memory
+        storage.put(order.getOrderNumber(), order);
+        return order;
+    }
+
+    @Override
+    public Order editOrder(Order newOrder, String date) throws PersistanceException {
+        // Finding and creating the file
+        String[] fields = date.split("-");
+        String filePath = ORDER_FILE_PATH + "Orders_" + fields[0] + fields[1] + fields[2] + ".txt";
+        File orderFile = new File(filePath);
+
+        // Load all orders from the selected file
+        List<Order> orders = importFromFiles(filePath); // Load all orders
+
+        // Replace the old order with the new one
+        for (int i = 0; i < orders.size(); i++) {
+            if (orders.get(i).getOrderNumber() == newOrder.getOrderNumber()) {
+                orders.set(i, newOrder);
+                break;
+            }
+        }
+
+        editOrderFromFile(orderFile, orders);
+
+        // Update in-memory storage
+        storage.put(newOrder.getOrderNumber(), newOrder);
+        return newOrder;
+    }
+
+    @Override
+    public Order removeOrder(Order orderToRemove, String date) throws PersistanceException {
+        // Finding and creating the file
+        String[] fields = date.split("-");
+        String filePath = ORDER_FILE_PATH + "Orders_" + fields[0] + fields[1] + fields[2] + ".txt";
+        File orderFile = new File(filePath);
+
+        // Load all orders from the selected file
+        List<Order> orders = importFromFiles(filePath);
+
+        Order removedOrder = null;
+
+        // Create a new list without the removed order
+        List<Order> updatedOrders = new ArrayList<>();
+        for (Order o : orders) {
+            if (o.getOrderNumber() == orderToRemove.getOrderNumber()) {
+                removedOrder = o;
+            } else {
+                updatedOrders.add(o);
+            }
+        }
+
+        removeOrderInFile(orderFile, updatedOrders);
+
+        // Remove from in-memory storage
+        storage.remove(orderToRemove.getOrderNumber());
+
+        return removedOrder;
+    }
+
+    @Override
+    public void exportOrdersDataToFile(String file) throws PersistanceException {
         try {
-            PrintWriter out = new PrintWriter(new FileWriter(orderFile, true));
+            // Attempt to open the file to overwrite on it
+            PrintWriter out = new PrintWriter(new FileWriter(file));
+
+            out.println("[ORDERS]");
+
+            // Using lambdas and streams in DAO
+            storage.values().stream()
+                    .map(order -> formatOrderForFile(order)) // Convert each order to a string
+                    .forEach(line -> out.println(line)); // Explicit lambda notation
+
+            // Blank line for separation
+            out.println();
+        } catch (IOException e) {
+            throw new PersistanceException("ERROR: Could not export orders data.");
+        }
+    }
+    //**** MAIN METHODS END ****//
+
+    //**** METHODS WITH FILES START****//
+    private void addOrderToFile(File file, Order order)throws PersistanceException{
+        try {
+            PrintWriter out = new PrintWriter(new FileWriter(file, true));
             // Append order details to file
             out.println(formatOrderForFile(order));
             out.flush();
-            storage.put(order.getOrderNumber(), order);
         }
         catch (IOException e ) {
-                throw new PersistanceException("ERROR: Problem reading the orders file");
-            }
-
-        return order;
+            throw new PersistanceException("ERROR: Problem reading the orders file");
+        }
     }
 
     private String formatOrderForFile(Order order) {
@@ -79,93 +173,26 @@ public class OrdersDAOFileImpl implements OrdersDAO{
                 order.getTotal();
     }
 
-    @Override
-    public Order editOrder(Order newOrder, String date) throws PersistanceException {
-        String[] fields = date.split("-");
-        String filePath = ORDER_FILE_PATH + "Orders_" + fields[0] + fields[1] + fields[2] + ".txt";
-
-        File orderFile = new File(filePath);
-        List<Order> orders = importFromFiles(filePath); // Load all orders
-
-        boolean orderNotFound = orders.stream().noneMatch(order -> order.getOrderNumber() == newOrder.getOrderNumber());
-        if(orderNotFound){
-            throw new PersistanceException("ERROR: Order number " + newOrder.getOrderNumber() + " not found for date " + date);
-        }
-
-        // Replace the old order with the new one
-        for (int i = 0; i < orders.size(); i++) {
-            if (orders.get(i).getOrderNumber() == newOrder.getOrderNumber()) {
-                orders.set(i, newOrder);
-                break;
-            }
-        }
-
+    private void editOrderFromFile(File file, List<Order> orders) throws PersistanceException{
         // Write the updated list back to the file
-        try (PrintWriter out = new PrintWriter(new FileWriter(orderFile))) {
+        try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
             for (Order order : orders) {
                 out.println(formatOrderForFile(order)); // Rewrite each order
             }
         } catch (IOException e) {
             throw new PersistanceException("ERROR: Problem writing to the orders file");
         }
-
-        storage.put(newOrder.getOrderNumber(), newOrder); // Update in-memory storage
-        return newOrder;
     }
 
-    @Override
-    public Order removeOrder(Order orderToRemove, String date) throws PersistanceException {
-        String[] fields = date.split("-");
-        String filePath = ORDER_FILE_PATH + "Orders_" + fields[0] + fields[1] + fields[2] + ".txt";
-
-        File orderFile = new File(filePath);
-        List<Order> orders = importFromFiles(filePath); // Load all orders from file
-
-        boolean orderFound = false;
-        Order removedOrder = null;
-
-        // Create a new list without the removed order
-        List<Order> updatedOrders = new ArrayList<>();
-        for (Order o : orders) {
-            if (o.getOrderNumber() == orderToRemove.getOrderNumber()) {
-                removedOrder = o;
-                orderFound = true;
-            } else {
-                updatedOrders.add(o);
-            }
-        }
-
-        if (!orderFound) {
-            throw new PersistanceException("ERROR: Order number " + orderToRemove.getOrderNumber() + " not found for date " + date);
-        }
-
-        // Rewrite the file with the updated orders
-        try (PrintWriter out = new PrintWriter(new FileWriter(orderFile))) {
+    private void removeOrderInFile(File file, List<Order> updatedOrders) throws PersistanceException{
+        // Rewrite the file without the order to remove
+        try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
             for (Order o : updatedOrders) {
                 out.println(formatOrderForFile(o));
             }
         } catch (IOException e) {
             throw new PersistanceException("ERROR: Problem writing to the orders file");
         }
-
-        // Remove from in-memory storage
-        storage.remove(orderToRemove.getOrderNumber());
-
-        return removedOrder; // Return the removed order
-    }
-
-    @Override
-    public List<Order> getOrdersByDate(String date)  throws PersistanceException{
-        // Date should be YY-MM-DD format
-        String[] fields = date.split("-");
-
-        String file = ORDER_FILE_PATH+"Orders_"+fields[0]+fields[1]+fields[2]+".txt";
-        return importFromFiles(file);
-    }
-
-    @Override
-    public int getCurrentNumberOfOrders() {
-        return storage.size();
     }
 
     public List<Order> importFromFiles(String file)  throws PersistanceException{
@@ -173,9 +200,11 @@ public class OrdersDAOFileImpl implements OrdersDAO{
         try{
             Scanner sc = new Scanner(new BufferedReader(new FileReader(file)));
             while(sc.hasNextLine()){
+                // Get the line and its fields
                 String s = sc.nextLine();
                 String[] fields = s.split(DELIMITER);
 
+                // Get all data needed and create the order object
                 Integer orderNumber = Integer.valueOf(fields[0]);
                 String customerName = fields[1];
                 String state = fields[2];
@@ -194,6 +223,8 @@ public class OrdersDAOFileImpl implements OrdersDAO{
                         laborCostPerSquareFoot, materialCost,
                         laborCost, tax, total
                 );
+
+                // Add order to the memory storage
                 orders.add(order);
             }
         }
@@ -205,16 +236,25 @@ public class OrdersDAOFileImpl implements OrdersDAO{
         }
         return orders;
     }
+    //**** METHODS WITH FILES END**** //
 
-    public void exportOrdersDataToFile(String file) throws PersistanceException {
-        try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
-            out.println("[ORDERS]"); // Section title
-            for (Order order : storage.values()) {
-                out.println(formatOrderForFile(order));
-            }
-            out.println(); // Blank line for separation
-        } catch (IOException e) {
-            throw new PersistanceException("ERROR: Could not export orders data.");
-        }
+    //**** HELPER METHODS START ****//
+    @Override
+    public List<Order> getOrdersByDate(String date)  throws PersistanceException{
+        // Date should be YY-MM-DD format
+        String[] fields = date.split("-");
+
+        String file = ORDER_FILE_PATH+"Orders_"+fields[0]+fields[1]+fields[2]+".txt";
+        return importFromFiles(file);
     }
+
+    @Override
+    public int getCurrentNumberOfOrders() {
+        return storage.size();
+    }
+    //**** HELPER METHODS END ****//
+
+
+
+
 }

@@ -34,17 +34,17 @@ public class ServiceLayerImpl implements ServiceLayer{
     //**** MAIN METHODS START ****//
 
     @Override
-    public Order addOrder(Order order, String date) {
+    public Order addOrder(Order order, String date) throws PersistanceException {
         return orders.addOrder(order, date);
     }
 
     @Override
-    public Order editOrder(Order order, String date) {
+    public Order editOrder(Order order, String date)throws PersistanceException {
         return orders.editOrder(order, date);
     }
 
     @Override
-    public Order removeOrder(Order order, String date) {
+    public Order removeOrder(Order order, String date)throws PersistanceException {
         return orders.removeOrder(order, date);
     }
 

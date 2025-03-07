@@ -15,9 +15,9 @@ import java.util.Map;
 
 public interface ServiceLayer {
     //**** MAIN METHODS START ****//
-    Order addOrder(Order order, String date);
-    Order editOrder(Order order, String date);
-    Order removeOrder(Order order, String date);
+    Order addOrder(Order order, String date) throws PersistanceException;
+    Order editOrder(Order order, String date) throws PersistanceException;
+    Order removeOrder(Order order, String date) throws PersistanceException;
     void exportAllData();
     //**** MAIN METHODS END ****//
 
