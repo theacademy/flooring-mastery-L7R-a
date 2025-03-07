@@ -137,7 +137,7 @@ public class FloorController {
             }
         } while (hasErrors);
 
-        Order order = createOrder(name, service.getCurrentNumberOfOrders()+1, state, product, area);
+        Order order = createOrder(name, service.getNextOrderNumber(), state, product, area);
 
         view.displayOrderInformation(order);
 

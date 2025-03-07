@@ -68,6 +68,7 @@ public class ProductsDAOFileImpl implements ProductsDAO{
 
             // Iterate through all products entries in the storage and write each to the file
             out.println("[PRODUCTS]");
+            out.flush();
             for (Product product : storage.values()) {
                 out.println(product.getProductType()+","+product.getCostPerSquareFoot()+","
                 +product.getLaborCostPerSquareFoot());
@@ -75,6 +76,7 @@ public class ProductsDAOFileImpl implements ProductsDAO{
 
             // Blank line for separation
             out.println();
+            out.flush();
         } catch (IOException e) {
             throw new PersistanceException("ERROR: Could not export products data.");
         }

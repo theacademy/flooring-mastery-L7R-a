@@ -17,41 +17,12 @@ public class OrdersDAOFileImpl implements OrdersDAO{
     private HashMap<Integer, Order> storage = new HashMap<>();
     public String ORDER_FILE_PATH = "Files/Orders/";
     final static String DELIMITER = ",";
-    public int currentSize = 0;
+    public int nextOrderNumber = 0;
 
 
     public OrdersDAOFileImpl() {
         loadAllOrders();
     }
-
-    private void loadAllOrders() {
-        File folder = new File(ORDER_FILE_PATH);
-
-        // Using lambda and listFiles to get all the files in the folder.
-        // Then check if the names of each file matches the condition.
-        // Dir is the folder directory where the files are
-        File[] listOfFiles = folder.
-                listFiles((dir, name) -> name.startsWith("Orders_") && name.endsWith(".txt"));
-
-
-        if (listOfFiles != null) {
-            for (File file : listOfFiles) {
-                // Using absolute path to convert the file to a string
-                List<Order> orders = importFromFiles(file.getAbsolutePath());
-                for(Order order : orders){
-                    storage.put(order.getOrderNumber(), order);
-                }
-            }
-        }
-
-        currentSize = storage.size();
-    }
-
-    @Override
-    public Order getOrder(Integer number) {
-        return storage.get(number);
-    }
-
 
     //**** MAIN METHODS START****//
     @Override
@@ -66,6 +37,7 @@ public class OrdersDAOFileImpl implements OrdersDAO{
 
         // Store order in memory
         storage.put(order.getOrderNumber(), order);
+        nextOrderNumber = order.getOrderNumber()+1;
         return order;
     }
 
@@ -131,14 +103,16 @@ public class OrdersDAOFileImpl implements OrdersDAO{
             PrintWriter out = new PrintWriter(new FileWriter(file));
 
             out.println("[ORDERS]");
+            out.flush();
 
             // Using lambdas and streams in DAO
             storage.values().stream()
                     .map(order -> formatOrderForFile(order)) // Convert each order to a string
-                    .forEach(line -> out.println(line)); // Explicit lambda notation
+                    .forEach(line -> out.println(line) ); // Explicit lambda notation
 
             // Blank line for separation
             out.println();
+            out.flush();
         } catch (IOException e) {
             throw new PersistanceException("ERROR: Could not export orders data.");
         }
@@ -175,9 +149,11 @@ public class OrdersDAOFileImpl implements OrdersDAO{
 
     private void editOrderFromFile(File file, List<Order> orders) throws PersistanceException{
         // Write the updated list back to the file
-        try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+        try {
+            PrintWriter out = new PrintWriter(new FileWriter(file));
             for (Order order : orders) {
                 out.println(formatOrderForFile(order)); // Rewrite each order
+                out.flush();
             }
         } catch (IOException e) {
             throw new PersistanceException("ERROR: Problem writing to the orders file");
@@ -186,9 +162,11 @@ public class OrdersDAOFileImpl implements OrdersDAO{
 
     private void removeOrderInFile(File file, List<Order> updatedOrders) throws PersistanceException{
         // Rewrite the file without the order to remove
-        try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
+        try {
+            PrintWriter out = new PrintWriter(new FileWriter(file));
             for (Order o : updatedOrders) {
                 out.println(formatOrderForFile(o));
+                out.flush();
             }
         } catch (IOException e) {
             throw new PersistanceException("ERROR: Problem writing to the orders file");
@@ -236,9 +214,39 @@ public class OrdersDAOFileImpl implements OrdersDAO{
         }
         return orders;
     }
+
+    private void loadAllOrders() {
+        File folder = new File(ORDER_FILE_PATH);
+
+        // Using lambda and listFiles to get all the files in the folder.
+        // Then check if the names of each file matches the condition.
+        // Dir is the folder directory where the files are
+        File[] listOfFiles = folder.
+                listFiles((dir, name) -> name.startsWith("Orders_") && name.endsWith(".txt"));
+
+
+        if (listOfFiles != null) {
+            for (File file : listOfFiles) {
+                // Using absolute path to convert the file to a string
+                List<Order> orders = importFromFiles(file.getAbsolutePath());
+                for(Order order : orders){
+                    nextOrderNumber = Math.max(order.getOrderNumber()+1, nextOrderNumber);
+                    storage.put(order.getOrderNumber(), order);
+                }
+            }
+        }
+
+    }
+
     //**** METHODS WITH FILES END**** //
 
     //**** HELPER METHODS START ****//
+
+    @Override
+    public Order getOrder(Integer number) {
+        return storage.get(number);
+    }
+
     @Override
     public List<Order> getOrdersByDate(String date)  throws PersistanceException{
         // Date should be YY-MM-DD format
@@ -249,9 +257,10 @@ public class OrdersDAOFileImpl implements OrdersDAO{
     }
 
     @Override
-    public int getCurrentNumberOfOrders() {
-        return storage.size();
+    public int getNextOrderNumber() {
+        return nextOrderNumber;
     }
+
     //**** HELPER METHODS END ****//
 
 

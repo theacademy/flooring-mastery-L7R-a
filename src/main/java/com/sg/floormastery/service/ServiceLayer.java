@@ -35,7 +35,7 @@ public interface ServiceLayer {
     Tax getTax(String stateCode);
     Product getProduct(String productType);
     Order getOrder(Integer orderNumber);
-    int getCurrentNumberOfOrders();
+    int getNextOrderNumber();
     //**** GET METHODS END ****//
 
     //**** VALIDATIONS START ****//

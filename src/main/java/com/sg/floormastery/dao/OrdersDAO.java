@@ -12,5 +12,5 @@ public interface OrdersDAO {
     void exportOrdersDataToFile(String file) throws PersistanceException;
 
     List<Order> getOrdersByDate(String date);
-    int getCurrentNumberOfOrders();
+    int getNextOrderNumber();
 }

@@ -66,12 +66,15 @@ public class TaxDAOFileImpl implements TaxDAO{
 
             // Iterate through all tax entries in the storage and write each to the file
             out.println("[TAXES]");
+            out.flush();
+
             for (Tax tax : storage.values()) {
                 out.println(tax.getStateAbbreviation()+","+tax.getStateName()+","+ tax.getTaxRate());
             }
 
             // Blank line for separation
             out.println();
+            out.flush();
         } catch (IOException e) {
             throw new PersistanceException("ERROR: Could not export taxes data.");
         }

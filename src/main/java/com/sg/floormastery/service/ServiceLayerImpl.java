@@ -153,8 +153,8 @@ public class ServiceLayerImpl implements ServiceLayer{
     }
 
     @Override
-    public int getCurrentNumberOfOrders() {
-        return orders.getCurrentNumberOfOrders();
+    public int getNextOrderNumber() {
+        return orders.getNextOrderNumber();
     }
 
     //**** GET METHODS END ****//
