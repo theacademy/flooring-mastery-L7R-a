@@ -174,5 +174,15 @@ class OrdersDAOFileImplTest {
 
     }
 
+    @Test
+    void testExportOrdersDataToFile(){
+        // Specify the path where the file should be created
+        String filePath = "Files/TestExportData/ExportOrders.txt";
+        testDao.loadAllOrders();
+        assertDoesNotThrow(() ->
+                        testDao.exportOrdersDataToFile(filePath)
+                , "Importing from file should not throw an exception");
+    }
+
 
 }

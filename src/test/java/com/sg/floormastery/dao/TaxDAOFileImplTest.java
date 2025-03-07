@@ -59,4 +59,13 @@ class TaxDAOFileImplTest {
         assertEquals(4, testDao.getStatesAbbreviation().size(), "There should be 4 types");
     }
 
+    @Test
+    void testExportTaxesDataToFile(){
+        // Specify the path where the file should be created
+        String filePath = "Files/TestExportData/ExportTaxes.txt";
+        testDao.importFromFile();
+        assertDoesNotThrow(() ->
+                        testDao.exportTaxesDataToFile(filePath)
+                , "Importing from file should not throw an exception");
+    }
 }

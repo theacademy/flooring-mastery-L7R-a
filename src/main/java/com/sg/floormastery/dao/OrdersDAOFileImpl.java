@@ -218,7 +218,7 @@ public class OrdersDAOFileImpl implements OrdersDAO{
         return orders;
     }
 
-    private void loadAllOrders() {
+    public void loadAllOrders() {
         File folder = new File(ORDER_FILE_PATH);
 
         // Using lambda and listFiles to get all the files in the folder.

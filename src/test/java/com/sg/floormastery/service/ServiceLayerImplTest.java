@@ -399,4 +399,9 @@ class ServiceLayerImplTest {
         assertTrue(orderNumber > 0, "Order number should be greater than 0.");
     }
 
+    @Test
+    void testExportAllData(){
+        service.exportAllData();
+    }
+
     }

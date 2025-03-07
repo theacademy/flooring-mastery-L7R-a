@@ -72,6 +72,14 @@ class ProductsDAOFileImplTest {
     }
 
 
-
+    @Test
+    void testExportProductsDataToFile(){
+        // Specify the path where the file should be created
+        String filePath = "Files/TestExportData/ExportProducts.txt";
+        testDao.importFromFile();
+        assertDoesNotThrow(() ->
+                        testDao.exportProductsDataToFile(filePath)
+                , "Importing from file should not throw an exception");
+    }
 
 }
