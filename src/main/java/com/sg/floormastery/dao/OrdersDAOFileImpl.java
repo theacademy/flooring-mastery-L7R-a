@@ -62,6 +62,7 @@ public class OrdersDAOFileImpl implements OrdersDAO{
             }
         }
 
+        // Overwrite file with the updated order
         editOrderFromFile(orderFile, orders);
 
         // Update in-memory storage
@@ -91,6 +92,7 @@ public class OrdersDAOFileImpl implements OrdersDAO{
             }
         }
 
+        // Overwrite file with the updated order
         removeOrderInFile(orderFile, updatedOrders);
 
         // Remove from in-memory storage
