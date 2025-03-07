@@ -1,6 +1,5 @@
 package com.sg.floormastery.dao;
 
-import com.sg.floormastery.dto.Product;
 import com.sg.floormastery.dto.Tax;
 import org.springframework.stereotype.Component;
 
@@ -13,8 +12,12 @@ import java.util.Scanner;
 @Component
 public class TaxDAOFileImpl implements TaxDAO{
     private HashMap<String, Tax> storage = new HashMap<>();
-    public String TAXES_FILE = "Files/Taxes/Taxes.txt";
-    final static String DELIMITER = ",";
+    private final static String TAXES_FILE = "Files/Taxes/Taxes.txt";
+    private final static String DELIMITER = ",";
+
+    public TaxDAOFileImpl() {
+        importFromFile();
+    }
 
     @Override
     public Tax getTax(String stateCode) {
@@ -24,7 +27,6 @@ public class TaxDAOFileImpl implements TaxDAO{
     @Override
     public HashSet<String> getStatesAbbreviation() throws PersistanceException{
         HashSet<String> states = new HashSet<>();
-        importFromFile();
         for(Tax stateAbbreviation : storage.values()){
             states.add(stateAbbreviation.getStateAbbreviation());
         }
@@ -34,16 +36,22 @@ public class TaxDAOFileImpl implements TaxDAO{
     public void importFromFile() throws PersistanceException{
         try{
             Scanner sc = new Scanner(new BufferedReader(new FileReader(TAXES_FILE)));
+
+            // Making sure the hash map is clear before adding new content
             storage.clear();
+
             while(sc.hasNextLine()){
+                // Get the line and its fields
                 String s = sc.nextLine();
                 String[] fields = s.split(DELIMITER);
+
+                // Create the tax object with the data and store it in the hash map
                 Tax tax = new Tax(fields[0], fields[1], new BigDecimal(fields[2]));
                 storage.put(fields[0], tax);
             }
         }
         catch (FileNotFoundException e){
-            throw new PersistanceException("ERROR: There was a problem when opening the taxes file");
+            throw new PersistanceException("ERROR: There was a problem finding the taxes file");
         }
         catch (IOException | NumberFormatException e ) {
             throw new PersistanceException("ERROR: Problem reading the taxes file");
@@ -51,13 +59,19 @@ public class TaxDAOFileImpl implements TaxDAO{
     }
 
     public void exportTaxesDataToFile(String file) throws PersistanceException {
-        try (PrintWriter out = new PrintWriter(new FileWriter(file, true))) { // Append mode
-            importFromFile();
-            out.println("[TAXES]"); // Section title
+        try {
+
+            // Attempt to open the file for appending data
+            PrintWriter out = new PrintWriter(new FileWriter(file, true));
+
+            // Iterate through all tax entries in the storage and write each to the file
+            out.println("[TAXES]");
             for (Tax tax : storage.values()) {
                 out.println(tax.getStateAbbreviation()+","+tax.getStateName()+","+ tax.getTaxRate());
             }
-            out.println(); // Blank line for separation
+
+            // Blank line for separation
+            out.println();
         } catch (IOException e) {
             throw new PersistanceException("ERROR: Could not export taxes data.");
         }
