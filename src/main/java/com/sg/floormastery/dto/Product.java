@@ -3,26 +3,26 @@ package com.sg.floormastery.dto;
 import java.math.BigDecimal;
 
 public class Product {
-    private String ProductType;
-    private BigDecimal CostPerSquareFoot;
-    private BigDecimal LaborCostPerSquareFoot;
+    private String productType;
+    private BigDecimal costPerSquareFoot;
+    private BigDecimal laborCostPerSquareFoot;
 
     public Product(String productType, BigDecimal costPerSquareFoot, BigDecimal laborCostPerSquareFoot) {
-        ProductType = productType;
-        CostPerSquareFoot = costPerSquareFoot;
-        LaborCostPerSquareFoot = laborCostPerSquareFoot;
+        this.productType = productType;
+        this.costPerSquareFoot = costPerSquareFoot;
+        this.laborCostPerSquareFoot = laborCostPerSquareFoot;
     }
 
     public String getProductType() {
-        return ProductType;
+        return productType;
     }
 
     public BigDecimal getCostPerSquareFoot() {
-        return CostPerSquareFoot;
+        return costPerSquareFoot;
     }
 
     public BigDecimal getLaborCostPerSquareFoot() {
-        return LaborCostPerSquareFoot;
+        return laborCostPerSquareFoot;
     }
 
 }
