@@ -17,23 +17,12 @@ public class Tax {
         return StateAbbreviation;
     }
 
-    public void setStateAbbreviation(String stateAbbreviation) {
-        StateAbbreviation = stateAbbreviation;
-    }
-
     public String getStateName() {
         return StateName;
-    }
-
-    public void setStateName(String stateName) {
-        StateName = stateName;
     }
 
     public BigDecimal getTaxRate() {
         return TaxRate;
     }
 
-    public void setTaxRate(BigDecimal taxRate) {
-        TaxRate = taxRate;
-    }
 }
