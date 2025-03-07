@@ -66,6 +66,6 @@ class TaxDAOFileImplTest {
         testDao.importFromFile();
         assertDoesNotThrow(() ->
                         testDao.exportTaxesDataToFile(filePath)
-                , "Importing from file should not throw an exception");
+                , "Exporting to file should not throw an exception");
     }
 }

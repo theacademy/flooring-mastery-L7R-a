@@ -2,6 +2,9 @@ package com.sg.floormastery.dao;
 
 import com.sg.floormastery.dto.Product;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,6 +42,21 @@ public class ProductsDAOStubImpl implements ProductsDAO {
 
     @Override
     public void exportProductsDataToFile(String file) {
+        try {
+            // Attempt to open the file for appending data
+            PrintWriter out = new PrintWriter(new FileWriter(file, true));
 
+            // Iterate through all products entries in the storage and write each to the file
+            out.println("[PRODUCTS]");
+            out.flush();
+                out.println(product.getProductType()+","+product.getCostPerSquareFoot()+","
+                        +product.getLaborCostPerSquareFoot());
+
+            // Blank line for separation
+            out.println();
+            out.flush();
+        } catch (IOException e) {
+            throw new PersistanceException("ERROR: Could not export products data.");
+        }
     }
 }

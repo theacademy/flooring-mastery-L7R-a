@@ -123,12 +123,6 @@ class ServiceLayerImplTest {
     }
 
     @Test
-    void exportAllData() {
-        assertDoesNotThrow(() -> service.exportAllData(),
-                "Exporting all data should not throw an exception.");
-    }
-
-    @Test
     void testIsFutureDateValid(){
         String validDate = "10-30-2025";
         try{
@@ -401,7 +395,10 @@ class ServiceLayerImplTest {
 
     @Test
     void testExportAllData(){
-        service.exportAllData();
-    }
+        // Set the export path to a valid file location for testing
+        String filePath = "Files/TestExportData/ExportServiceLayer.txt";
+        assertDoesNotThrow(() ->
+                        service.exportAllData(filePath)
+                , "Exporting to file should not throw an exception");    }
 
     }

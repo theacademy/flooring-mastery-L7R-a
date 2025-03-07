@@ -47,7 +47,7 @@ public class FloorController {
                     removeOrder();
                     break;
                 case 5:
-                    exportAllData();
+                    exportAllData("Files/Backup/ExportedData.txt");
                     break;
                 case 6:
                     quit();
@@ -274,8 +274,8 @@ public class FloorController {
         view.displayActionResult(result, "removed");
     }
 
-    private void exportAllData() throws PersistanceException{
-        service.exportAllData();
+    private void exportAllData(String filePath) throws PersistanceException{
+        service.exportAllData(filePath);
         view.displaySuccessExportation();
     }
 

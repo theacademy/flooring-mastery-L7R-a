@@ -49,12 +49,11 @@ public class ServiceLayerImpl implements ServiceLayer{
     }
 
     @Override
-    public void exportAllData() {
+    public void exportAllData(String filePath) {
         // All components will be writing & appending to the same file in order
-        final String EXPORT_FILE_PATH = "Files/Backup/ExportedData.txt";
-        orders.exportOrdersDataToFile(EXPORT_FILE_PATH);
-        products.exportProductsDataToFile(EXPORT_FILE_PATH);
-        taxes.exportTaxesDataToFile(EXPORT_FILE_PATH);
+        orders.exportOrdersDataToFile(filePath);
+        products.exportProductsDataToFile(filePath);
+        taxes.exportTaxesDataToFile(filePath);
     }
 
     //**** MAIN METHODS END ****//

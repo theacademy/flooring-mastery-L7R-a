@@ -114,7 +114,7 @@ class OrdersDAOFileImplTest {
     }
 
     @Test
-    void testAddGetOrdersByDateGetNextOrderNumber() {
+    void testAddOrderGetOrdersByDateGetNextOrderNumber() {
         String date = "05-31-2025";
         Order order = new Order(2,
                 "Steve", "TX",  new BigDecimal("4.45"),
