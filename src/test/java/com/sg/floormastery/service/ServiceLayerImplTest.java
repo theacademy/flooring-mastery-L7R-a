@@ -1,17 +1,23 @@
 package com.sg.floormastery.service;
 
-import com.sg.floormastery.controller.FloorController;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.stereotype.Component;
+import org.junit.jupiter.api.Test;
 
-@Component
-public class ServiceLayerImplTest {
-    public ServiceLayerImplTest() {
-        AnnotationConfigApplicationContext appContext = new AnnotationConfigApplicationContext();
-        appContext.scan("com.sg.floormastery");
-        appContext.refresh();
+import static org.junit.jupiter.api.Assertions.*;
+class ServiceLayerImplTest {
 
-        FloorController controller = appContext.getBean("floorController", FloorController.class);
-        controller.run();
+    @Test
+    void addOrder() {
+    }
+
+    @Test
+    void editOrder() {
+    }
+
+    @Test
+    void removeOrder() {
+    }
+
+    @Test
+    void exportAllData() {
     }
 }

@@ -3,18 +3,14 @@ package com.sg.floormastery.dao;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-class ProductsDAOFileImplTest {
+class TaxDAOFileImplTest {
 
     @Test
-    void getAllProducts() {
+    void getTax() {
     }
 
     @Test
-    void getAllProductTypes() {
-    }
-
-    @Test
-    void getProduct() {
+    void getStatesAbbreviation() {
     }
 
     @Test
@@ -22,6 +18,6 @@ class ProductsDAOFileImplTest {
     }
 
     @Test
-    void exportProductsDataToFile() {
+    void exportTaxesDataToFile() {
     }
 }

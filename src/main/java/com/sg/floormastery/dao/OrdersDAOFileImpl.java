@@ -23,6 +23,9 @@ public class OrdersDAOFileImpl implements OrdersDAO{
     public OrdersDAOFileImpl() {
         loadAllOrders();
     }
+    public OrdersDAOFileImpl(String filePath){
+        ORDER_FILE_PATH = filePath;
+    }
 
     //**** MAIN METHODS START****//
     @Override
