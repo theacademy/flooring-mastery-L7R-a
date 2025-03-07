@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 @Component
 public class TaxDAOFileImpl implements TaxDAO{
@@ -26,11 +27,10 @@ public class TaxDAOFileImpl implements TaxDAO{
 
     @Override
     public HashSet<String> getStatesAbbreviation() throws PersistanceException{
-        HashSet<String> states = new HashSet<>();
-        for(Tax stateAbbreviation : storage.values()){
-            states.add(stateAbbreviation.getStateAbbreviation());
-        }
-        return states;
+        // Using lambdas and streams in DAO
+        return storage.values().stream()
+                        .map(tax -> tax.getStateAbbreviation())
+                        .collect(Collectors.toCollection(() -> new HashSet<>()));
     }
 
     public void importFromFile() throws PersistanceException{
