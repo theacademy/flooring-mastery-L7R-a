@@ -8,13 +8,11 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 @Component
 public class ProductsDAOFileImpl implements ProductsDAO{
+    private HashMap<String, Product> storage = new HashMap<>();
     public String PRODUCTS_FILE = "Files/Products/Products.txt";
     final static String DELIMITER = ",";
 

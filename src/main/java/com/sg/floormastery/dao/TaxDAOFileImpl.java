@@ -6,18 +6,15 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 
 @Component
 public class TaxDAOFileImpl implements TaxDAO{
+    private HashMap<String, Tax> storage = new HashMap<>();
     public String TAXES_FILE = "Files/Taxes/Taxes.txt";
     final static String DELIMITER = ",";
-
-    @Override
-    public Tax addStateTaxEntry(String stateCode, BigDecimal taxRate) {
-        return null;
-    }
 
     @Override
     public Tax getTax(String stateCode) {

@@ -6,11 +6,14 @@ import org.springframework.stereotype.Component;
 import java.io.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
 @Component
 public class OrdersDAOFileImpl implements OrdersDAO{
+    // Key is the object number and the value is the order itself
+    private HashMap<Integer, Order> storage = new HashMap<>();
     public String ORDER_FILE_PATH = "Files/Orders/";
     final static String DELIMITER = ",";
     public int currentSize = 0;
