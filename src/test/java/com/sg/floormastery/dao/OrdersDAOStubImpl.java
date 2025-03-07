@@ -1,28 +1,45 @@
 package com.sg.floormastery.dao;
 
 import com.sg.floormastery.dto.Order;
+import com.sg.floormastery.dto.Tax;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OrdersDAOStubImpl implements OrdersDAO {
+    public Order order;
+    public OrdersDAOStubImpl() {
+         order = new Order(1,
+                "TEST_EDITING", "CA",  new BigDecimal("3.2"), "Woods", new BigDecimal("17.02"),
+                new BigDecimal("1.15"), new BigDecimal("2.10"),
+                new BigDecimal("70"), new BigDecimal("27"),
+                new BigDecimal("100"),new BigDecimal("4500.18"));
+    }
+
     @Override
     public Order getOrder(Integer number) {
-        return null;
+        if(number == order.getOrderNumber()){
+            return order;
+        }
+        else{
+            return null;
+        }
     }
 
     @Override
     public Order addOrder(Order order, String date) throws PersistanceException {
-        return null;
+        return order;
     }
 
     @Override
     public Order editOrder(Order newOrder, String date) throws PersistanceException {
-        return null;
+        return newOrder;
     }
 
     @Override
     public Order removeOrder(Order orderToRemove, String date) throws PersistanceException {
-        return null;
+        return orderToRemove;
     }
 
     @Override
@@ -32,11 +49,13 @@ public class OrdersDAOStubImpl implements OrdersDAO {
 
     @Override
     public List<Order> getOrdersByDate(String date) {
-        return List.of();
+        List<Order> list = new ArrayList<>();
+        list.add(order);
+        return list;
     }
 
     @Override
     public int getNextOrderNumber() {
-        return 0;
+        return 2;
     }
 }

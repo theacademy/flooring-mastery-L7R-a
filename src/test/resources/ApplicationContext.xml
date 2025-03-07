@@ -39,7 +39,7 @@
           class="com.sg.floormastery.service.ServiceLayerImpl">
         <constructor-arg ref="OrdersDaoStub"/>
         <constructor-arg ref="ProductsDaoStub"/>
-        <constructor-arg ref="TaxesDAOStubImpl"/>
+        <constructor-arg ref="TaxesDaoStub"/>
 
     </bean>
 

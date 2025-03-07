@@ -16,7 +16,6 @@ class OrdersDAOFileImplTest {
     @BeforeEach
     public void setUp() throws Exception{
         String testPath = "Files/TestsOrders/";
-        // Use the FileWriter to quickly blank the file
         testDao = new OrdersDAOFileImpl(testPath);
     }
 
@@ -60,7 +59,7 @@ class OrdersDAOFileImplTest {
 
     @Test
     void testAddEditOrder() {
-        String date = "05-28-2025";
+        String date = "05-29-2025";
         Order order = new Order(1,
                 "Diego", "TX",  new BigDecimal("4.45"), "Tiles", new BigDecimal("127.02"),
                 new BigDecimal("2.25"), new BigDecimal("2.10"),
@@ -97,7 +96,7 @@ class OrdersDAOFileImplTest {
 
     @Test
     void testAddRemoveOrder() {
-        String date = "05-28-2025";
+        String date = "05-30-2025";
         Order order = new Order(1,
                 "Diego", "TX",  new BigDecimal("4.45"),
                 "Tiles", new BigDecimal("127.02"),
@@ -116,16 +115,16 @@ class OrdersDAOFileImplTest {
 
     @Test
     void testAddGetOrdersByDateGetNextOrderNumber() {
-        String date = "05-28-2025";
-        Order order = new Order(1,
-                "Diego", "TX",  new BigDecimal("4.45"),
+        String date = "05-31-2025";
+        Order order = new Order(2,
+                "Steve", "TX",  new BigDecimal("4.45"),
                 "Tiles", new BigDecimal("127.02"),
                 new BigDecimal("2.25"), new BigDecimal("2.10"),
                 new BigDecimal("120"), new BigDecimal("83"),
                 new BigDecimal("77"),new BigDecimal("3900.12"));
         testDao.addOrder(order, date);
 
-        Order secondOrder = new Order(2,
+        Order secondOrder = new Order(3,
                 "TEST_EDITING", "CA",  new BigDecimal("3.2"), "Woods", new BigDecimal("17.02"),
                 new BigDecimal("1.15"), new BigDecimal("2.10"),
                 new BigDecimal("70"), new BigDecimal("27"),
@@ -135,8 +134,8 @@ class OrdersDAOFileImplTest {
         List<Order> orders = testDao.getOrdersByDate(date);
         int next = testDao.getNextOrderNumber();
 
-        Order orderStored = orders.get(1);
-        Order orderStoredSecond = orders.get(0);
+        Order orderStored = orders.get(0);
+        Order orderStoredSecond = orders.get(1);
 
         assertEquals(order.getOrderNumber(),
                 orderStored.getOrderNumber(),
@@ -170,8 +169,8 @@ class OrdersDAOFileImplTest {
                 orderStoredSecond.getArea(),
                 "Checking second order area");
 
-        assertEquals(3, next,
-                "Next order should be number 3");
+        assertEquals(4, next,
+                "Next order should be number 4");
 
     }
 
