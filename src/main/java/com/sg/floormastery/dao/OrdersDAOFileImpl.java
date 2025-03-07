@@ -152,7 +152,7 @@ public class OrdersDAOFileImpl implements OrdersDAO{
     }
 
     @Override
-    public List<Order> getOrderByDate(String date)  throws PersistanceException{
+    public List<Order> getOrdersByDate(String date)  throws PersistanceException{
         // Date should be YY-MM-DD format
         String[] fields = date.split("-");
 

@@ -174,6 +174,10 @@ public class FloorView {
         io.print(message+"\n");
     }
 
+    public void displayStartEditingOrder(){
+        io.print("To start editing this order provide the following information");
+    }
+
     public void displaySuccessExportation() {
         io.print("Data exported successfully! Check a file called ExportedData inside the Backup folder.");
     }

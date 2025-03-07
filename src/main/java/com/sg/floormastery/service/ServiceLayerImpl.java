@@ -15,9 +15,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -57,7 +55,7 @@ public class ServiceLayerImpl implements ServiceLayer{
 
     @Override
     public List<Order> getOrders(String date)  throws PersistanceException{
-        return orders.getOrderByDate(date);
+        return orders.getOrdersByDate(date);
     }
 
     @Override
@@ -78,7 +76,10 @@ public class ServiceLayerImpl implements ServiceLayer{
     }
 
     @Override
-    public Order getOrder(Integer orderNumber) {
+    public Order getOrder(Integer orderNumber) throws  PersistanceException{
+        if(orders.getOrder(orderNumber) == null){
+            throw new PersistanceException("The order couldn't be found!");
+        }
         return orders.getOrder(orderNumber);
     }
 
@@ -101,8 +102,8 @@ public class ServiceLayerImpl implements ServiceLayer{
     }
 
     @Override
-    public List<BigDecimal> doAllOrderCalculations(Tax tax, Product product, BigDecimal area) {
-        List<BigDecimal> calculationsData = new ArrayList<>();
+    public Map<String, BigDecimal> doAllOrderCalculations(Tax tax, Product product, BigDecimal area) {
+        Map<String, BigDecimal> calculationsData = new HashMap<>();
         BigDecimal costPerSquareFoot, laborCostPerSquareFoot, taxRate, materialCost, laborCost, taxCost,total;
 
         costPerSquareFoot = product.getCostPerSquareFoot();
@@ -114,13 +115,13 @@ public class ServiceLayerImpl implements ServiceLayer{
         taxCost = calTax(materialCost, laborCost, taxRate);
         total = calTotal(materialCost, laborCost, taxCost);
 
-        calculationsData.add(taxRate);
-        calculationsData.add(costPerSquareFoot);
-        calculationsData.add(laborCostPerSquareFoot);
-        calculationsData.add(materialCost);
-        calculationsData.add(laborCost);
-        calculationsData.add(taxCost);
-        calculationsData.add(total);
+        calculationsData.put("taxRate",taxRate);
+        calculationsData.put("costPerSquareFoot",costPerSquareFoot);
+        calculationsData.put("laborCostPerSquareFoot",laborCostPerSquareFoot);
+        calculationsData.put("materialCost",materialCost);
+        calculationsData.put("laborCost",laborCost);
+        calculationsData.put("taxCost",taxCost);
+        calculationsData.put("total",total);
         return calculationsData;
     }
 
@@ -131,7 +132,7 @@ public class ServiceLayerImpl implements ServiceLayer{
 
 
     @Override
-    public boolean isDateValid(String userInput) throws InvalidOrderException {
+    public boolean isFutureDateValid(String userInput) throws InvalidOrderException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
         LocalDate today = LocalDate.now();
 
@@ -146,7 +147,7 @@ public class ServiceLayerImpl implements ServiceLayer{
         return true;
     }
 
-    public boolean isExistingDateValid(String userInput)  throws InvalidOrderException{
+    public boolean isDateValid(String userInput)  throws InvalidOrderException{
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
         LocalDate today = LocalDate.now();
         try {

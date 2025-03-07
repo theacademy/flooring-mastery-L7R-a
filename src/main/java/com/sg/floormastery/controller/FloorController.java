@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,11 +28,10 @@ public class FloorController {
 
     // **** SELECT ACTION METHODS START **** //
 
-    // Execute one of the main CRUD methods using output from getMenuOption
     public void run(){
         boolean keep = true;
-
         while (keep) {
+        try {
             int option = getMenuOption();
             switch (option) {
                 case 1:
@@ -58,19 +55,16 @@ public class FloorController {
                     break;
 
             }
+        } catch (PersistanceException | InvalidOrderException e) {
+            view.displayErrorMessage(e.getMessage());
+            view.displayPressEnterToContinue();
+        }
         }
     }
 
-    // Get user menu input as an int
-    private int getMenuOption(){
-        try{
-            return view.displayMenu();
-        }
-        catch (InvalidOrderException e){
-            view.displayErrorMessage(e.getMessage());
-            view.displayPressEnterToContinue();
-            return -1;
-        }
+    private int getMenuOption() throws InvalidOrderException{
+        return view.displayMenu();
+
     }
 
     // **** SELECT ACTION METHODS END **** //
@@ -81,10 +75,9 @@ public class FloorController {
     private void displayOrders(){
         view.displayOrdersBanner();
 
-        // getOrders gives the orders to display as a hashMap with only 1 key (date).
-        Map<String, List<Order>> dateOrdersMap = getOrders();
-        String date = dateOrdersMap.keySet().iterator().next();
-        List<Order> userOrders = dateOrdersMap.get(date);
+        // Get an existing date and then all orders with it
+        String date = getOrderDate();
+        List<Order> userOrders = service.getOrders(date);
 
         view.displayOrders(userOrders);
     }
@@ -102,16 +95,16 @@ public class FloorController {
         boolean hasErrors = false;
 
 
+        /* In each if statement, first store any user input.
+        * Then check if the service validates it.
+        * If yes, then store it in the final variable,
+        * else it is an error and user tries again */
         do {
-            /* In each if statement, first store any user input.
-            * Then check if the service validates it.
-            * If yes, then store it in the final variable,
-            * else it is an error and user tries again */
             try {
 
                 if(date == null){
                     String temporaryDate = view.getUserOrderDate();
-                    date = service.isDateValid(temporaryDate) ? temporaryDate : null;
+                    date = service.isFutureDateValid(temporaryDate) ? temporaryDate : null;
                 }
 
                 if(name == null){
@@ -144,29 +137,14 @@ public class FloorController {
             }
         } while (hasErrors);
 
-        // Create tax and product objects to get the detail cost for that state and product type
-        Tax taxSelected = service.getTax(state);
-        Product productSelected = service.getProduct(product);
-
-        // Convert from string to BigDecimal now that it passed the validation
-        BigDecimal areaSelected = new BigDecimal(area).setScale(2, RoundingMode.HALF_UP);
-
-        // Get all the cost data with the information from the user in the same order as the order object needs it
-        List<BigDecimal> calculations = service.doAllOrderCalculations(taxSelected, productSelected, areaSelected);
-
-
-        Order order = new Order(service.getCurrentNumberOfOrders()+1,
-                name, state, calculations.get(0), product, areaSelected,
-                calculations.get(1), calculations.get(2),
-                calculations.get(3), calculations.get(4), calculations.get(5), calculations.get(6));
-
+        Order order = createOrder(name, service.getCurrentNumberOfOrders()+1, state, product, area);
 
         view.displayOrderInformation(order);
 
         // Confirm the user wants to do the action and do it if so
-        String decision = confirmAction("add");
+        String performAction = confirmAction("add");
 
-        if(decision.equalsIgnoreCase("Y")){
+        if(performAction.equalsIgnoreCase("Y")){
             Order result = service.addOrder(order, date);
             view.displayActionResult(result, "added");
         }
@@ -175,58 +153,56 @@ public class FloorController {
 
     private void editOrder(){
         view.displayEditOrderBanner();
-        Integer orderNumber = null;
-        Map<String, List<Order>> dateOrdersMap = getOrders();
-        if(dateOrdersMap.isEmpty()){
-            return;
-        }
-
-        String date = dateOrdersMap.keySet().iterator().next();
-        List<Order> orders = dateOrdersMap.get(date);
-
-
-        orderNumber = getOrderNumber();
-        Order order = service.getOrder(orderNumber);
-
-        // Date exist but doesn't have this order number
-        if(order == null){
-            view.displayErrorMessage("No order number matched with the date given");
-            return;
-        }
-
-        view.displayOrderInformation(order);
-        String performAction = "";
-        do{
-            performAction = view.confirmAction("edit");
-        }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
-
-        String newName, newState, newProductType, newArea;
-        newName = newState = newProductType = newArea = null;
 
         boolean hasErrors = false;
 
-        view.displayAddOrderBanner();
+        // Initializing variables that could be updated
+        String newName, newState, newProductType, newArea;
+        newName = newState = newProductType = newArea = null;
 
+        // Variables used to find the order to update
+        Integer orderNumber;
+        String date;
+
+        // Get an existing order with the user order number and date
+         date = getOrderDate();
+        orderNumber = getValidOrderNumber();
+        Order order = service.getOrder(orderNumber);
+
+        // Show the order found and ask if they want to edit it
+        view.displayOrderInformation(order);
+        String performAction = confirmAction("edit");
+        if(performAction.equalsIgnoreCase("N")){
+           return;
+        }
+
+        // Start the editing process of this order
+        view.displayStartEditingOrder();
+
+        /* For each field, show current data, save user input in temporary data,
+            If input changed and is valid, and store the changes.
+            If is blank, keep the current values. Otherwise, error and user tries again.
+        */
         do {
             try {
                 if(newName == null){
                     view.displayCurrentName(order);
                     String temporaryName = view.getUserOrderName();
-                    if(temporaryName.equals("")){
+                    if(temporaryName.isBlank()){
                         newName = order.getCustomerName();
                     }
                     else{
-                        newName = validateInput(temporaryName, service.isNameValid(temporaryName));
+                        newName = service.isNameValid(temporaryName) ? temporaryName : null;
                     }
                 }
                 if(newState == null){
                     view.displayCurrentState(order);
                     String temporaryState = view.getUserOrderState();
-                    if(temporaryState.equals("")){
+                    if(temporaryState.isBlank()){
                         newState = order.getState();
                     }
                     else{
-                        newState = validateInput(temporaryState, service.isStateValid(temporaryState));
+                        newState = service.isStateValid(temporaryState) ? temporaryState : null;
                     }
 
                 }
@@ -237,7 +213,7 @@ public class FloorController {
                         newProductType = order.getProductType();
                     }
                     else{
-                        newProductType = validateInput(temporaryProduct, service.isProductValid(temporaryProduct));
+                        newProductType = service.isProductValid(temporaryProduct) ? temporaryProduct : null;
                     }
                 }
                 if(newArea == null){
@@ -247,7 +223,7 @@ public class FloorController {
                         newArea = String.valueOf(order.getArea());
                     }
                     else{
-                        newArea = validateInput(temporaryArea, service.isAreaValid(temporaryArea));
+                        newArea = service.isAreaValid(temporaryArea) ? temporaryArea : null;
                     }
                 }
                 hasErrors = false;
@@ -257,28 +233,18 @@ public class FloorController {
             }
         } while (hasErrors);
 
-        Tax taxSelected = service.getTax(newState);
-        Product productSelected = service.getProduct(newProductType);
+        // Calculate and create new order with this information
+        Order newOrder = createOrder(newName, orderNumber, newState, newProductType, newArea);
 
+        view.displayOrderInformation(newOrder);
 
-        BigDecimal areaSelected, costPerSquareFoot, laborCostPerSquareFoot, taxRate, materialCost, laborCost, tax,total;
+        // Confirm if they want to save changes
+        performAction = confirmAction("save");
+        if(performAction.equalsIgnoreCase("N")){
+            return;
+        }
 
-        areaSelected = new BigDecimal(newArea).setScale(2, RoundingMode.HALF_UP);
-        costPerSquareFoot = productSelected.getCostPerSquareFoot();
-        laborCostPerSquareFoot = productSelected.getLaborCostPerSquareFoot();
-        taxRate = taxSelected.getTaxRate();
-
-        materialCost = service.calMaterialCost(areaSelected, costPerSquareFoot);
-        laborCost = service.calLaborCost(areaSelected, laborCostPerSquareFoot);
-        tax = service.calTax(materialCost, laborCost, taxRate);
-        total = service.calTotal(materialCost, laborCost, tax);
-
-        Order newOrder = new Order(order.getOrderNumber(),
-                newName, newState, taxRate, newProductType, areaSelected,
-                costPerSquareFoot, laborCostPerSquareFoot,
-                materialCost, laborCost, tax, total);
-
-
+        // Put the update both in memory and in file.
         Order result = service.editOrder(newOrder, date);
         view.displayActionResult(result, "edited");
 
@@ -286,45 +252,31 @@ public class FloorController {
 
     private void removeOrder(){
         view.displayRemoveOrderBanner();
-        Map<String, List<Order>> dateOrdersMap = getOrders();
-        if(dateOrdersMap.isEmpty()){
-            return;
 
+        // Variables used to find the order to update
+        Integer orderNumber;
+        String date;
 
-        }
-        Integer orderNumber = null;
-        String date = dateOrdersMap.keySet().iterator().next();
-        List<Order> orders = dateOrdersMap.get(date);
-
-        orderNumber = getOrderNumber();
+        // Get an existing order with the user order number and date
+        date = getOrderDate();
+        orderNumber = getValidOrderNumber();
         Order order = service.getOrder(orderNumber);
 
-        // Date exist but doesn't have this order number
-        if(order == null){
-            view.displayErrorMessage("No order number matched with the date given");
+        // Show order and confirm they want to remove it
+        view.displayOrderInformation(order);
+        String performAction = confirmAction("remove");
+        if(performAction.equalsIgnoreCase("N")){
             return;
         }
 
-
-
-        view.displayOrderInformation(order);
-        String performAction = "";
-        do{
-            performAction = view.confirmAction("remove");
-        }while (!performAction.equalsIgnoreCase("Y") && !performAction.equalsIgnoreCase("N"));
-
+        // Put the remove both in memory and in file.
         Order result = service.removeOrder(order, date);
         view.displayActionResult(result, "removed");
     }
 
     private void exportAllData(){
-        try{
-            service.exportAllData();
-            view.displaySuccessExportation();
-        }
-        catch (PersistanceException e){
-            view.displayErrorMessage(e.getMessage());
-        }
+        service.exportAllData();
+        view.displaySuccessExportation();
     }
 
     private void quit(){
@@ -344,15 +296,32 @@ public class FloorController {
         return performAction;
     }
 
-    private Map<String, List<Order>> getOrders(){
+    private Order createOrder(String name, Integer number, String state, String product, String area){
+        // Create objects to get the details of the calculations
+        Tax taxSelected = service.getTax(state);
+        Product productSelected = service.getProduct(product);
+        BigDecimal areaSelected = new BigDecimal(area).setScale(2, RoundingMode.HALF_UP);
+
+        // Do the calculations to create an object. Keys are the field name and the values are the BigDecimals
+        Map<String, BigDecimal>  costs = service.doAllOrderCalculations(taxSelected, productSelected, areaSelected);
+
+        return new Order(number,
+                name, state, costs.get("taxRate"), product, areaSelected,
+                costs.get("costPerSquareFoot"), costs.get("laborCostPerSquareFoot"),
+                costs.get("materialCost"), costs.get("laborCost"),
+                costs.get("taxCost"), costs.get("total"));
+    }
+
+    private String getOrderDate(){
 
         boolean hasErrors = false;
         String date = null;
         List<Order> orders = null;
         do {
             try {
+                // Get input, verify it is valid and not empty. Otherwise error
                 String temporaryDate = view.getUserOrderDate();
-                date = validateInput(temporaryDate, service.isExistingDateValid(temporaryDate));
+                date = service.isDateValid(temporaryDate) ? temporaryDate : null;
                 orders = service.getOrders(date);
                 if(orders.isEmpty()){
                     throw new PersistanceException("ERROR: There are no orders with this date!");
@@ -364,37 +333,31 @@ public class FloorController {
             }
         } while (hasErrors);
 
-        Map<String, List<Order>> dateOrdersMap = new HashMap<>();
-        dateOrdersMap.put(date, orders);
-        return dateOrdersMap;
+        return date;
     }
 
-    private Integer getOrderNumber(){
+    private Integer getValidOrderNumber(){
         boolean hasErrors = false;
         Integer number = null;
         String strNumber = null;
         do {
-            number = null;
             try {
+                // Get input, verify it is valid and that exists. Otherwise error
                 strNumber = view.getUserOrderNumber();
                 if(service.isOrderNumberValid(strNumber)){
                     number = Integer.parseInt(strNumber);
                 }
+                if(service.getOrder(number) == null){
+                    throw new InvalidOrderException("Order with this number couldn't be found");
+                }
                 hasErrors = false;
+
             } catch (InvalidOrderException | PersistanceException e) {
                 hasErrors = true;
                 view.displayErrorMessage(e.getMessage());
             }
         } while (hasErrors);
         return number;
-    }
-
-    // Given an input and a validation from the service layer, return the input if it passed the validation
-    private String validateInput(String input, boolean validation) throws InvalidOrderException{
-        if(validation){
-            return input;
-        }
-        return null;
     }
 
     // **** HELPER METHODS END **** //

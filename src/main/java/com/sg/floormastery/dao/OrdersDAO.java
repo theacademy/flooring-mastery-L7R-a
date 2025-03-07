@@ -1,8 +1,6 @@
 package com.sg.floormastery.dao;
 
 import com.sg.floormastery.dto.Order;
-
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 
@@ -14,7 +12,7 @@ public interface OrdersDAO {
     Order addOrder(Order order, String date);
     Order editOrder(Order newOrder, String date);
     Order removeOrder(Order orderToRemove, String date) ;
-    List<Order> getOrderByDate(String date);
+    List<Order> getOrdersByDate(String date);
     int getCurrentNumberOfOrders();
     void exportOrdersDataToFile(String file);
 }

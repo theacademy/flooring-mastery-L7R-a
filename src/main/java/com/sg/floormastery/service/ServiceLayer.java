@@ -8,8 +8,10 @@ import com.sg.floormastery.dto.Tax;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 public interface ServiceLayer {
 
@@ -21,8 +23,8 @@ public interface ServiceLayer {
     List<Product> getProducts();
     Tax getTax(String stateCode);
     Order addOrder(Order order, String date);
-    boolean isDateValid(String userInput) throws InvalidOrderException;
-    public boolean isExistingDateValid(String userInput)  throws InvalidOrderException;
+    boolean isFutureDateValid(String userInput) throws InvalidOrderException;
+    boolean isDateValid(String userInput)  throws InvalidOrderException;
     boolean isNameValid(String userInput) throws InvalidOrderException;
     boolean isStateValid(String userInput) throws InvalidOrderException;
     boolean isProductValid(String userInput) throws InvalidOrderException;
@@ -38,6 +40,6 @@ public interface ServiceLayer {
     Order removeOrder(Order order, String date);
 
     void exportAllData();
-    List<BigDecimal> doAllOrderCalculations(Tax tax, Product product, BigDecimal area);
+    Map<String, BigDecimal> doAllOrderCalculations(Tax tax, Product product, BigDecimal area);
 }
 
